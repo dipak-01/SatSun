@@ -4,7 +4,7 @@ import { supabase } from "../db/supabaseClient.js";
 
 const {
   JWT_SECRET = "dev-secret",
-  JWT_EXPIRES_IN = "15m",
+  JWT_EXPIRES_IN = "60m",
   JWT_REFRESH_EXPIRES_IN = "7d",
 } = process.env;
 

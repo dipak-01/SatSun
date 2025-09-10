@@ -8,6 +8,7 @@ import {
   catalogCreate,
   catalogUpdate,
   catalogDelete,
+  addActivityToDay
 } from "../controllers/activityController.js";
 
 const router = Router();
@@ -22,5 +23,6 @@ router.get("/:id", catalogGet);
 router.post("/", catalogCreate);
 router.put("/:id", catalogUpdate);
 router.delete("/:id", catalogDelete);
+router.post("/day/:dayId/instances", addActivityToDay);
 
 export default router;

@@ -227,3 +227,32 @@ export async function addDayToWeekend(req, res) {
     return res.status(500).json({ error: "add day failed" });
   }
 }
+export async function listWeekends(req, res) {
+  try {
+    const userId = getUserId(req);
+    const includeDays = req.query.includeDays === "true";
+    let query = supabase.from("weekend_plans").select("*").order("created_at", { ascending: false });
+    if (userId) query = query.eq("user_id", userId);
+    let { data: plans, error } = await query;
+    if (error) throw error;
+
+    if (includeDays && plans.length) {
+      const ids = plans.map(p => p.id);
+      const { data: days, error: dayErr } = await supabase
+        .from("day_instances")
+        .select("*, activity_instances(*)")
+        .in("weekend_plan_id", ids)
+        .order("order", { ascending: true });
+      if (dayErr) throw dayErr;
+      const map = {};
+      for (const d of days) {
+        (map[d.weekend_plan_id] ||= []).push(d);
+      }
+      plans = plans.map(p => ({ ...p, days: map[p.id] || [] }));
+    }
+
+    return res.json(plans);
+  } catch (e) {
+    return res.status(500).json({ error: "list weekends failed" });
+  }
+}

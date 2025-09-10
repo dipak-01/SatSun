@@ -1,11 +1,161 @@
 
+@import "tailwindcss";
+@plugin "daisyui" {
+   
+};
+@plugin "daisyui/theme" {
+  name: "cozyblanket";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(12% 0.02 270);      /* Deep warm charcoal */
+  --color-base-200: oklch(18% 0.03 275);      /* Soft cocoa */
+  --color-base-300: oklch(24% 0.04 280);      /* Toasted marshmallow */
+  --color-base-content: oklch(96% 0.005 270); /* Creamy off-white */
+  --color-primary: oklch(75% 0.12 45);        /* Warm amber glow */
+  --color-primary-content: oklch(15% 0.01 30);/* Deep brown text */
+  --color-secondary: oklch(68% 0.08 300);     /* Dusty lavender */
+  --color-secondary-content: oklch(20% 0.02 280);
+  --color-accent: oklch(70% 0.1 80);          /* Soft moss green */
+  --color-accent-content: oklch(20% 0.03 70);
+  --color-neutral: oklch(20% 0.02 275);
+  --color-neutral-content: oklch(97% 0.003 270);
+  --color-info: oklch(60% 0.1 220);           /* Gentle sky hint */
+  --color-success: oklch(65% 0.15 120);       /* Herbal green */
+  --color-warning: oklch(65% 0.18 50);        /* Honey tone */
+  --color-error: oklch(60% 0.2 5);            /* Muted terracotta */
+  --radius-box: 1.5rem;                       /* Extra soft corners */
+  --radius-field: 1rem;
+  --border: 1px;
+  --depth: 0;                                 /* Flatter, calmer shadows */
+  --noise: 0.5;                               /* Subtle grain for warmth */
+}
+@plugin "daisyui/theme" {
+  name: "peakpulse";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(10% 0.01 280);      /* Deep slate */
+  --color-base-200: oklch(16% 0.02 285);      /* Alpine shadow */
+  --color-base-300: oklch(22% 0.03 290);      /* Icy rockface */
+  --color-base-content: oklch(98% 0.004 270); /* Bright snow */
+  --color-primary: oklch(80% 0.18 160);       /* Electric teal — energy! */
+  --color-primary-content: oklch(10% 0.01 180);
+  --color-secondary: oklch(75% 0.15 300);     /* Summit purple */
+  --color-secondary-content: oklch(15% 0.02 290);
+  --color-accent: oklch(85% 0.2 60);          /* Sunrise yellow */
+  --color-accent-content: oklch(15% 0.04 50);
+  --color-neutral: oklch(18% 0.02 285);
+  --color-neutral-content: oklch(98% 0.002 270);
+  --color-info: oklch(65% 0.16 210);          /* Glacier blue */
+  --color-success: oklch(70% 0.22 130);       /* Forest burst */
+  --color-warning: oklch(70% 0.25 45);        /* Trail marker orange */
+  --color-error: oklch(65% 0.28 0);           /* Warning red — crisp */
+  --radius-box: 0.75rem;                      /* Sharper, sporty corners */
+  --radius-field: 0.5rem;
+  --border: 2px;
+  --depth: 2;                                 /* Stronger shadows — dynamic */
+  --noise: 0;                                 /* Clean, sharp, no texture */
+}@plugin "daisyui/theme" {
+  name: "confettiglow-light";
+  default: false;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(98% 0.005 80);      /* Warm paper white */
+  --color-base-200: oklch(94% 0.01 85);       /* Soft cream */
+  --color-base-300: oklch(90% 0.015 90);      /* Sun-kissed linen */
+  --color-base-content: oklch(15% 0.01 280);  /* Rich charcoal text */
+  --color-primary: oklch(82% 0.22 340);       /* Rosé sparkle */
+  --color-primary-content: oklch(25% 0.04 330);
+  --color-secondary: oklch(85% 0.18 50);      /* Golden confetti */
+  --color-secondary-content: oklch(20% 0.05 40);
+  --color-accent: oklch(88% 0.24 100);        /* Lime fizz */
+  --color-accent-content: oklch(25% 0.06 90);
+  --color-neutral: oklch(88% 0.01 85);
+  --color-neutral-content: oklch(20% 0.01 270);
+  --color-info: oklch(75% 0.16 250);          /* Sky peek */
+  --color-success: oklch(80% 0.25 140);       /* Tropical punch */
+  --color-warning: oklch(80% 0.3 35);         /* Marigold streamers */
+  --color-error: oklch(75% 0.32 350);         /* Raspberry pop */
+  --radius-box: 1.25rem;
+  --radius-field: 1rem;
+  --border: 0;
+  --depth: 1;
+  --noise: 1.5;                               /* Subtle paper texture */
+}
+
+@plugin "daisyui/theme" {
+  name: "caramellatte";
+  default: false;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(98% 0.016 73.684);
+  --color-base-200: oklch(95% 0.038 75.164);
+  --color-base-300: oklch(90% 0.076 70.697);
+  --color-base-content: oklch(40% 0.123 38.172);
+  --color-primary: oklch(0% 0 0);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(22.45% 0.075 37.85);
+  --color-secondary-content: oklch(90% 0.076 70.697);
+  --color-accent: oklch(46.44% 0.111 37.85);
+  --color-accent-content: oklch(90% 0.076 70.697);
+  --color-neutral: oklch(55% 0.195 38.402);
+  --color-neutral-content: oklch(98% 0.016 73.684);
+  --color-info: oklch(42% 0.199 265.638);
+  --color-info-content: oklch(90% 0.076 70.697);
+  --color-success: oklch(43% 0.095 166.913);
+  --color-success-content: oklch(90% 0.076 70.697);
+  --color-warning: oklch(82% 0.189 84.429);
+  --color-warning-content: oklch(41% 0.112 45.904);
+  --color-error: oklch(70% 0.191 22.216);
+  --color-error-content: oklch(39% 0.141 25.723);
+  --radius-selector: 2rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 2px;
+  --depth: 1;
+  --noise: 1;
+}
+
+@plugin "daisyui/theme" {
+  name: "stillpool";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(9% 0.008 270);      /* Deep calm */
+  --color-base-200: oklch(15% 0.01 272);      /* Mist over water */
+  --color-base-300: oklch(20% 0.012 275);     /* Gentle ripple */
+  --color-base-content: oklch(98% 0.002 270); /* Pure clarity */
+  --color-primary: oklch(70% 0.08 200);       /* Still water blue */
+  --color-primary-content: oklch(15% 0.01 190);
+  --color-secondary: oklch(65% 0.06 120);     /* Bamboo green */
+  --color-secondary-content: oklch(20% 0.01 110);
+  --color-accent: oklch(75% 0.07 300);        /* Lotus petal */
+  --color-accent-content: oklch(20% 0.015 290);
+  --color-neutral: oklch(16% 0.01 272);
+  --color-neutral-content: oklch(98% 0.001 270);
+  --color-info: oklch(60% 0.09 220);          /* Horizon line */
+  --color-success: oklch(65% 0.1 130);        /* New growth */
+  --color-warning: oklch(65% 0.11 60);        /* Soft sunbeam */
+  --color-error: oklch(60% 0.12 350);         /* Gentle alert */
+  --radius-box: 2rem;                         /* Ultra soft, flowing curves */
+  --radius-field: 1.5rem;
+  --border: 0;
+  --depth: 0;                                 /* Zero shadows — floaty, calm */
+  --noise: 0.2;                               /* Almost imperceptible grain */
+}
 #root {
-  max-width: 1280px;
+  max-width: 2440px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
 }
-
+/*
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -40,4 +190,4 @@
 
 .read-the-docs {
   color: #888;
-}
+}  */

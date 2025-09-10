@@ -1,10 +1,8 @@
-import { Flex, Text, Button } from "@radix-ui/themes";
-
-export default function MyApp() {
-	return (
-		<Flex direction="column" gap="2">
-			<Text>Hello from Radix Themes :)</Text>
-			<Button>Let's go</Button>
-		</Flex>
-	);
+// Simple demo component (replaced Radix components with plain HTML + Tailwind)
+export default function Demo() {
+  return (
+    <div className="flex flex-col gap-3 items-start bg-neutral-800 border border-neutral-700 rounded-lg p-6 w-full max-w-sm shadow">
+     
+    </div>
+  );
 }
