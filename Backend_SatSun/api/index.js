@@ -1,2 +1,6 @@
 import app from "../app.js";
-export default app;
+
+// Wrap the Express app in a default handler for Vercel's Node runtime
+export default function handler(req, res) {
+	return app(req, res);
+}
