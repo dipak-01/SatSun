@@ -15,10 +15,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 // Create Express app
 const app = express();
-// Trust proxy (Vercel/behind CDN) so secure cookies and protocol detection work
 app.set("trust proxy", 1);
 
-// Allow all origins by reflecting the Origin header (compatible with credentials)
 const corsOptions = {
   origin: true,
   credentials: true,
@@ -63,5 +61,14 @@ export { supabase };
 
 // API routes
 app.use("/api", router);
+
+// Global error handler (last)
+// Ensures errors surface as JSON instead of crashing the serverless function
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err?.stack || err?.message || String(err));
+  if (res.headersSent) return;
+  res.status(500).json({ error: "Internal Server Error" });
+});
 
 export default app;
