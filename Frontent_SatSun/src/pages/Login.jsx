@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 export default function Login() {
   const [email, setEmail] = useState("dipak@gmail.com");
   const [password, setPassword] = useState("abcd1234");
@@ -13,14 +13,7 @@ export default function Login() {
     setMessage("");
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
-        {
-          email,
-          password,
-        },
-        { withCredentials: true }
-      );
+      const res = await api.post(`auth/login`, { email, password });
       const data = await res.data;
       console.log(data);
       if (!data) {

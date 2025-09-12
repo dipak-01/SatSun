@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../lib/api";
 import { useState } from "react";
 export default function NewWeekendModal() {
   const [weekends, setWeekends] = useState(null);
@@ -26,13 +26,7 @@ export default function NewWeekendModal() {
                 ...raw,
               };
               try {
-                const res = await axios.post(
-                  `${import.meta.env.VITE_BACKEND_URL}/api/weekends`,
-                  payload,
-                  {
-                    withCredentials: true,
-                  }
-                );
+                const res = await api.post(`weekends`, payload);
                 setWeekends((prev) =>
                   prev
                     ? { ...prev, items: [res.data, ...prev.items] }
@@ -81,7 +75,7 @@ export default function NewWeekendModal() {
                 required
               />
             </div>
-            
+
             <div className="form-control w-full max-w-xs">
               <label className="label">
                 <span className="label-text">Mood</span>

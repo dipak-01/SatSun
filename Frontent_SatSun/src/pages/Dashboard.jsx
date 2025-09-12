@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../lib/api";
 import { Calendar, Plus, PartyPopper, Sparkles, Info } from "lucide-react";
 import ActivityCard from "../components/ActivityCard.jsx";
 import WeekendCard from "../components/WeekendCard.jsx";
@@ -24,10 +24,9 @@ function Dashboard() {
 
     const getWeekendsList = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/weekends?includeDays=true`,
-          { withCredentials: true }
-        );
+        const res = await api.get(`weekends`, {
+          params: { includeDays: true },
+        });
         setWeekends(res.data);
       } catch (err) {
         console.error("Failed to fetch the weekends data", err);
@@ -37,10 +36,7 @@ function Dashboard() {
 
     const getActivitiesList = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/activities`,
-          { withCredentials: true }
-        );
+        const res = await api.get(`activities`);
         setActivities(res.data);
       } catch (err) {
         console.error("Failed to fetch the activities data", err);

@@ -1,6 +1,6 @@
-import axios from "axios";
+import api from "../lib/api";
 import { useState } from "react";
-export default function NewActicityModal() {
+export default function NewActivityModal() {
   const [activities, setActivities] = useState(null);
   console.log(activities);
   return (
@@ -36,13 +36,7 @@ export default function NewActicityModal() {
                   : [],
               };
               try {
-                const res = await axios.post(
-                  `${import.meta.env.VITE_BACKEND_URL}/api/activities`,
-                  payload,
-                  {
-                    withCredentials: true,
-                  }
-                );
+                const res = await api.post(`activities`, payload);
                 setActivities((prev) =>
                   prev
                     ? { ...prev, items: [res.data, ...prev.items] }

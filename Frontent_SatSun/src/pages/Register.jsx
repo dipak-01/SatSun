@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -14,15 +14,9 @@ export default function Register() {
     setMessage("");
     setLoading(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, 
-        {withCredentials: true},
-        {
-        
-         name,email, password } // allow httpOnly cookies
-  
-      );
+      const res = await api.post(`auth/register`, { name, email, password });
       const data = await res.data;
-      if (!res.ok) {
+      if (!data || data.error) {
         setError(data?.error || "Register failed");
       } else {
         setMessage("User Registerd");
@@ -36,13 +30,11 @@ export default function Register() {
     } finally {
       setLoading(false);
       window.location.href = "/";
-
     }
   }
 
   return (
     <main className=" flex items-center justify-center h-screen ">
-        
       <form
         onSubmit={handleSubmit}
         className="card w-96 bg-base-300 shadow-sm"
@@ -86,7 +78,7 @@ export default function Register() {
               title="Only letters, numbers or dash"
             />
           </label>
-           
+
           <label className="input validator">
             <svg
               className="h-[1em] opacity-50"
@@ -139,9 +131,6 @@ export default function Register() {
               type="password"
               required
               placeholder="Password"
-              
-              
-              
               autoComplete="current-password"
             />
           </label>
@@ -162,7 +151,7 @@ export default function Register() {
             </button>
           </div>
         </div>
-      </form> 
+      </form>
     </main>
   );
 }
