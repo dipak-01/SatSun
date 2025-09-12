@@ -24,6 +24,14 @@ function signTokens(user) {
   return { accessToken, refreshToken };
 }
 
+// Cookie options helper: allow cross-site in production
+const isProd = process.env.NODE_ENV === "production";
+const baseCookieOptions = {
+  httpOnly: true,
+  sameSite: isProd ? "none" : "lax",
+  secure: isProd,
+};
+
 export async function register(req, res) {
   try {
     const { email, name, password } = req.body;
@@ -54,14 +62,8 @@ export async function register(req, res) {
       .update({ refresh_token: tokens.refreshToken })
       .eq("id", user.id);
 
-    res.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      sameSite: "lax",
-    });
-    res.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      sameSite: "lax",
-    });
+  res.cookie("accessToken", tokens.accessToken, baseCookieOptions);
+  res.cookie("refreshToken", tokens.refreshToken, baseCookieOptions);
     return res.json({
       user: { id: user.id, email: user.email, name: user.name },
     });
@@ -97,14 +99,8 @@ export async function login(req, res) {
       .update({ refresh_token: tokens.refreshToken })
       .eq("id", user.id);
 
-    res.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      sameSite: "lax",
-    });
-    res.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      sameSite: "lax",
-    });
+  res.cookie("accessToken", tokens.accessToken, baseCookieOptions);
+  res.cookie("refreshToken", tokens.refreshToken, baseCookieOptions);
     return res.json({
       user: { id: user.id, email: user.email, name: user.name },
     });
@@ -132,14 +128,8 @@ export async function refresh(req, res) {
       .from("users")
       .update({ refresh_token: tokens.refreshToken })
       .eq("id", user.id);
-    res.cookie("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      sameSite: "lax",
-    });
-    res.cookie("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      sameSite: "lax",
-    });
+  res.cookie("accessToken", tokens.accessToken, baseCookieOptions);
+  res.cookie("refreshToken", tokens.refreshToken, baseCookieOptions);
     return res.json({ ok: true });
   } catch (e) {
     return res.status(401).json({ error: "refresh failed" });
@@ -158,8 +148,9 @@ export async function logout(req, res) {
           .eq("id", payload.sub);
       } catch {}
     }
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+  // Clear with the same attributes to ensure deletion across sites
+  res.clearCookie("accessToken", baseCookieOptions);
+  res.clearCookie("refreshToken", baseCookieOptions);
     return res.json({ ok: true });
   } catch {
     return res.json({ ok: true });

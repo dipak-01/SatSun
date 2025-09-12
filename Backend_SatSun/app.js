@@ -15,12 +15,25 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 // Create Express app
 const app = express();
-app.use(
-    cors({
-        origin: "https://sat-sun.vercel.app",
-        credentials: true,
-    })
-);
+// Trust proxy (Vercel/behind CDN) so secure cookies and protocol detection work
+app.set("trust proxy", 1);
+
+// Allow credentials and restrict to frontend origins (prod + preview)
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "https://sat-sun.vercel.app";
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow same-origin (no origin header), prod site, and Vercel previews
+    const allowed = [FRONTEND_ORIGIN];
+    const isPreview = origin && /https:\/\/[a-z0-9-]+-sat-sun-.*-vercel\.app$/i.test(origin);
+    if (!origin || allowed.includes(origin) || isPreview) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS not allowed from origin: ${origin}`));
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(
   express.json({
     verify: (req, _res, buf) => {
