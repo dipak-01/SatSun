@@ -24,7 +24,9 @@ const corsOptions = {
   origin: (origin, callback) => {
     // Allow same-origin (no origin header), prod site, and Vercel previews
     const allowed = [FRONTEND_ORIGIN];
-    const isPreview = origin && /https:\/\/[a-z0-9-]+-sat-sun-.*-vercel\.app$/i.test(origin);
+    // Example previews: https://sat-sun-git-branch-user.vercel.app
+    const isPreview =
+      origin && /^https:\/\/sat-sun-.*\.vercel\.app$/i.test(origin);
     if (!origin || allowed.includes(origin) || isPreview) {
       return callback(null, true);
     }

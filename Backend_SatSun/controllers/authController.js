@@ -30,6 +30,7 @@ const baseCookieOptions = {
   httpOnly: true,
   sameSite: isProd ? "none" : "lax",
   secure: isProd,
+  path: "/",
 };
 
 export async function register(req, res) {
