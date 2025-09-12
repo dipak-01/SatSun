@@ -18,21 +18,11 @@ const app = express();
 // Trust proxy (Vercel/behind CDN) so secure cookies and protocol detection work
 app.set("trust proxy", 1);
 
-// Allow credentials and restrict to frontend origins (prod + preview)
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "https://sat-sun.vercel.app";
+// Allow all origins by reflecting the Origin header (compatible with credentials)
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow same-origin (no origin header), prod site, and Vercel previews
-    const allowed = [FRONTEND_ORIGIN];
-    // Example previews: https://sat-sun-git-branch-user.vercel.app
-    const isPreview =
-      origin && /^https:\/\/sat-sun-.*\.vercel\.app$/i.test(origin);
-    if (!origin || allowed.includes(origin) || isPreview) {
-      return callback(null, true);
-    }
-    return callback(new Error(`CORS not allowed from origin: ${origin}`));
-  },
+  origin: true,
   credentials: true,
+  optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
