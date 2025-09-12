@@ -207,7 +207,7 @@ export async function listDaysForWeekend(req, res) {
 export async function addDayToWeekend(req, res) {
   try {
     const id = req.params.id;
-    const { date, dayLabel, order, notes, colorTheme } = req.body;
+  const { date, dayLabel, order, notes, colorTheme } = req.body;
     if (!date) return res.status(400).json({ error: "date required" });
     const { data, error } = await supabase
       .from("day_instances")
@@ -225,6 +225,43 @@ export async function addDayToWeekend(req, res) {
     return res.status(201).json(data);
   } catch (e) {
     return res.status(500).json({ error: "add day failed" });
+  }
+}
+
+export async function updateDayForWeekend(req, res) {
+  try {
+    const weekendId = req.params.id;
+    const dayId = req.params.dayId;
+    const { date, dayLabel, order, notes, colorTheme } = req.body;
+    const patch = {};
+    if (date !== undefined) patch.date = date;
+    if (dayLabel !== undefined) patch.day_label = dayLabel;
+    if (order !== undefined) patch.order = order;
+    if (notes !== undefined) patch.notes = notes;
+    if (colorTheme !== undefined) patch.color_theme = colorTheme;
+    if (!Object.keys(patch).length)
+      return res.status(400).json({ error: "no fields to update" });
+
+    // Ensure the day belongs to the weekend
+    const { data: dayRow, error: dayErr } = await supabase
+      .from("day_instances")
+      .select("id, weekend_plan_id")
+      .eq("id", dayId)
+      .eq("weekend_plan_id", weekendId)
+      .maybeSingle();
+    if (dayErr) throw dayErr;
+    if (!dayRow) return res.status(404).json({ error: "not found" });
+
+    const { data, error } = await supabase
+      .from("day_instances")
+      .update(patch)
+      .eq("id", dayId)
+      .select()
+      .single();
+    if (error) throw error;
+    return res.json(data);
+  } catch (e) {
+    return res.status(500).json({ error: "update day failed" });
   }
 }
 export async function listWeekends(req, res) {

@@ -7,7 +7,8 @@ import {
   duplicateWeekend,
   listDaysForWeekend,
   addDayToWeekend,
-  listWeekends
+  updateDayForWeekend,
+  listWeekends,
 } from "../controllers/weekendController.js";
 
 const router = Router();
@@ -22,5 +23,6 @@ router.get("/", listWeekends);
 // Days under a weekend
 router.get("/:id/days", listDaysForWeekend);
 router.post("/:id/days", addDayToWeekend);
+router.put("/:id/days/:dayId", updateDayForWeekend);
 
 export default router;

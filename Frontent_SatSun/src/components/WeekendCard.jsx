@@ -33,7 +33,7 @@ export default function WeekendCard({ data }) {
 
   return (
     <>
-      <div className="card bg-base-100 w-96 shadow-sm">
+      <div className="card bg-base-100 min-w-96 shadow-sm">
         <div className="card-body">
           <h2 className="card-title">
             {data.title}

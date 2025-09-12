@@ -31,6 +31,7 @@ create table if not exists day_instances (
     date timestamptz not null,
     day_label text not null,
     "order" int not null,
+    start_time text,
     notes text,
     color_theme text,
     created_at timestamptz not null default now(),
@@ -112,3 +113,7 @@ $$;
 -- Backfill-safe migration for existing deployments
 alter table if exists users
 add column if not exists password_hash text;
+
+-- Backfill-safe day start time support
+alter table if exists day_instances
+add column if not exists start_time text;

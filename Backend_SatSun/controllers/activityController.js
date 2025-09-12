@@ -37,16 +37,12 @@ export async function addActivityToDay(req, res) {
   try {
     const userId = req.user?.id;
     const { dayId } = req.params;
-    const { activityId, order, startTime, endTime, notes, customMood } =
-      req.body;
+    const { activityId, order, notes, customMood } = req.body;
     if (!activityId)
       return res.status(400).json({ error: "activityId required" });
     // Ownership check
     const day = await ensureDayOwnership(dayId, userId);
     if (!day) return res.status(404).json({ error: "day not found" });
-
-    if (startTime && endTime && startTime > endTime)
-      return res.status(400).json({ error: "startTime after endTime" });
 
     // Auto order if not provided
     let finalOrder = toInt(order);
@@ -68,8 +64,6 @@ export async function addActivityToDay(req, res) {
         activity_id: activityId,
         day_id: dayId,
         order: finalOrder,
-        start_time: startTime || null,
-        end_time: endTime || null,
         notes: notes || null,
         custom_mood: customMood || null,
       })
@@ -87,19 +81,14 @@ export async function updateActivityInstance(req, res) {
   try {
     const userId = req.user?.id;
     const { instanceId } = req.params;
-    const { order, startTime, endTime, notes, customMood } = req.body;
+    const { order, notes, customMood } = req.body;
 
     // Ownership check
     const inst = await ensureInstanceOwnership(instanceId, userId);
     if (!inst) return res.status(404).json({ error: "not found" });
 
-    if (startTime && endTime && startTime > endTime)
-      return res.status(400).json({ error: "startTime after endTime" });
-
     const patch = {};
     if (order !== undefined) patch.order = toInt(order);
-    if (startTime !== undefined) patch.start_time = startTime;
-    if (endTime !== undefined) patch.end_time = endTime;
     if (notes !== undefined) patch.notes = notes;
     if (customMood !== undefined) patch.custom_mood = customMood;
     if (Object.keys(patch).length === 0)
