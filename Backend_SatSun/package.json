@@ -4,9 +4,10 @@
   "description": "Two days infinite possibility",
   "main": "index.js",
   "scripts": {
-    "test": "test",
-    "start": "nodemon index.js",
-    "lint": "eslint"
+  "test": "node -e 'console.log(\"no tests\")'",
+  "start": "node index.js",
+  "dev": "nodemon index.js",
+  "lint": "eslint ."
   },
   "author": "dipak kurkute",
   "license": "ISC",
