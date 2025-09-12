@@ -15,12 +15,36 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 // Create Express app
 const app = express();
-app.use(
-    cors({
-        origin: "https://sat-sun.vercel.app",
-        credentials: true,
-    })
-);
+
+// Trust proxy so secure cookies work behind Vercel/Proxies
+app.set("trust proxy", 1);
+
+// Dynamic CORS: allow multiple frontend origins via env
+const allowedOrigins = (process.env.FRONTEND_ORIGINS || "http://localhost:5173,https://sat-sun.vercel.app")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true); // allow non-browser tools
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Optionally allow Vercel preview deployments
+    if (
+      process.env.ALLOW_VERCEL_PREVIEWS === "true" &&
+      /\.vercel\.app$/i.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS: " + origin));
+  },
+  credentials: true,
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(
   express.json({
     verify: (req, _res, buf) => {
