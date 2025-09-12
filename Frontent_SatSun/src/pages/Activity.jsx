@@ -141,8 +141,8 @@ export default function Activity() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4  ">
+    <section className="space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Activities</h1>
         <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
           <Plus size={16} /> New Activity
@@ -150,7 +150,10 @@ export default function Activity() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-3 md:items-end mb-4">
-        <label className="form-control md:max-w-xs">
+        <label
+          className="form-control md:max-w-xs"
+          aria-label="Search activities"
+        >
           <div className="label flex justify-start ">
             <span className="label-text">Search</span>
           </div>
@@ -164,7 +167,10 @@ export default function Activity() {
             />
           </div>
         </label>
-        <label className="form-control md:max-w-xs">
+        <label
+          className="form-control md:max-w-xs"
+          aria-label="Filter by category"
+        >
           <div className="label justify-start flex w-20">
             <span className="label-text">Category</span>
           </div>
@@ -181,7 +187,10 @@ export default function Activity() {
             ))}
           </select>
         </label>
-        <label className="form-control md:max-w-xs">
+        <label
+          className="form-control md:max-w-xs"
+          aria-label="Filter by premium"
+        >
           <div className="label justify-start flex w-20">
             <span className="label-text">Premium</span>
           </div>
@@ -202,7 +211,9 @@ export default function Activity() {
           <span className="loading loading-dots loading-lg" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="alert">No activities found.</div>
+        <div className="alert">
+          <span>No activities match your filters.</span>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((a) => (
@@ -226,12 +237,29 @@ export default function Activity() {
                     ) : (
                       <span className="badge badge-ghost">Free</span>
                     )}
-                    <button className="btn btn-xs" onClick={() => openEdit(a)}>
+                    <button
+                      className="btn btn-xs"
+                      aria-label={`Edit ${a.title}`}
+                      onClick={() => openEdit(a)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openEdit(a);
+                        }
+                      }}
+                    >
                       <Edit3 size={14} />
                     </button>
                     <button
                       className="btn btn-xs btn-error"
+                      aria-label={`Delete ${a.title}`}
                       onClick={() => handleDelete(a)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleDelete(a);
+                        }
+                      }}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -573,6 +601,6 @@ export default function Activity() {
           </form>
         </dialog>
       )}
-    </div>
+    </section>
   );
 }

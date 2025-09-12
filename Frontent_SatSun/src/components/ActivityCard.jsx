@@ -32,30 +32,42 @@ export default function ActivityCard({ data }) {
   // }
 
   return (
-    <>
-      <div className="card bg-base-100 min-w-96 w-96  shadow-sm hover:scale-[1.01] transition-transform hover:shadow-md">
-        <div className="card-body">
-          <div>
-          <h2 className="card-title  text-start">
-           {data?.icon} {data?.title}
-            
+    <div className="card bg-base-100 min-w-80 w-96 shadow-sm hover:shadow transition-shadow">
+      <div className="card-body">
+        <div>
+          <h2 className="card-title text-left">
+            {data?.icon} {data?.title}
           </h2>
-          <p className="text-start pt-2 line-clamp-2">
-            {data?.description }
-          </p></div>
-          <div className="flex flex-row justify-between font-medium pt-4">
-            <span className="flex items-center gap-2">{<Clock size={16}/>}{data?.duration_min}{" "}min</span>
-            <span className="badge badge-dash badge-ghost" >{data?.category}</span>
-            <span className="badge badge-soft badge-info"> {data?.default_mood}</span>
-            </div>
-          <div className="card-actions justify-start flex flex-wrap gap-2 pt-4">
-            {data?.tags.map((tag, index) => (
-              <div key={index} className="badge badge-soft badge-secondary">{tag}</div>
-            ))}            
-            
-          </div>
+          {data?.description && (
+            <p className="text-left mt-2 line-clamp-2 opacity-90">
+              {data.description}
+            </p>
+          )}
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 font-medium pt-3 text-sm">
+          <span className="flex items-center gap-2">
+            <Clock size={16} />
+            {data?.duration_min} min
+          </span>
+          {data?.category && (
+            <span className="badge badge-ghost">{data.category}</span>
+          )}
+          {data?.default_mood && (
+            <span className="badge badge-soft badge-info">
+              {data.default_mood}
+            </span>
+          )}
+        </div>
+        {(data?.tags?.length ?? 0) > 0 && (
+          <div className="card-actions justify-start flex flex-wrap gap-2 pt-3">
+            {data.tags.map((tag, index) => (
+              <div key={index} className="badge badge-soft badge-secondary">
+                {tag}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }

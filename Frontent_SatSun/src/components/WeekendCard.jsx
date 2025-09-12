@@ -32,37 +32,34 @@ export default function WeekendCard({ data }) {
   }
 
   return (
-    <>
-      <div className="card bg-base-100 min-w-96 shadow-sm">
-        <div className="card-body">
-          <h2 className="card-title">
-            {data.title}
-            <img src="" alt="" />
-          </h2>
+    <div className="card bg-base-100 min-w-80 w-96 shadow-sm hover:shadow transition-shadow">
+      <div className="card-body">
+        <h2 className="card-title">{data.title}</h2>
 
-          <div className="flex flex-row justify-between font-medium">
-            <span className="flex items-center gap-2">
-              <Calendar /> {rangeLabel}
-            </span>
- 
-            <span className="flex items-center gap-2">
-              <Clock /> {duration}
-            </span>
-          </div>
+        <div className="flex flex-row justify-between items-center font-medium text-sm">
+          <span className="flex items-center gap-2">
+            <Calendar size={16} /> {rangeLabel}
+          </span>
+          <span className="flex items-center gap-2 opacity-80">
+            <Clock size={16} /> {duration}
+          </span>
+        </div>
 
-          <div className="card-actions flex justify-between items-center pt-2">
+        <div className="card-actions flex justify-between items-center pt-3">
+          {data?.mood && (
             <div className="badge badge-soft badge-secondary">{data.mood}</div>
-            {data?.shared && <div className="badge badge-soft badge-info">shared</div>}
-            <div className="justify-between flex gap-2 items-center">
-              <span>{<Share2 size={24} />}</span>
-
-              <span>
-                <button className="btn btn-soft btn-info">Info</button>
-              </span>
-            </div>
+          )}
+          <div className="flex items-center gap-2">
+            {data?.shared && (
+              <div className="badge badge-soft badge-info">Shared</div>
+            )}
+            <button className="btn btn-ghost btn-sm" aria-label="Share weekend">
+              <Share2 size={18} />
+            </button>
+            <button className="btn btn-primary btn-sm">Open</button>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

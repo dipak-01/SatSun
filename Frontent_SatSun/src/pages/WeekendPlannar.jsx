@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarPlus, Edit3, Trash2, Plus } from "lucide-react";
+import {
+  CalendarPlus,
+  Edit3,
+  Trash2,
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  StickyNote,
+  MoveRight,
+} from "lucide-react";
 import {
   getWeekends,
   createWeekend,
@@ -9,6 +18,9 @@ import {
   getActivities,
   deleteActivityInstance,
   toggleCompleteActivity,
+  updateActivityInstance,
+  createDayForWeekend,
+  updateDayForWeekend,
 } from "../lib/api";
 
 function toISODate(d) {
@@ -38,7 +50,15 @@ export default function WeekendPlannar() {
   });
   const [showAddActivityForDay, setShowAddActivityForDay] = useState(null); // day row
   const [selectedActivityId, setSelectedActivityId] = useState("");
-  const [orderHint, setOrderHint] = useState(0);
+  const [orderHint, setOrderHint] = useState("");
+
+  // New UI states
+  const [showAddDay, setShowAddDay] = useState(false);
+  const [newDayForm, setNewDayForm] = useState({ date: "", dayLabel: "" });
+  const [showEditDay, setShowEditDay] = useState(null); // holds day to edit
+  const [editDayLabel, setEditDayLabel] = useState("");
+  const [editInstance, setEditInstance] = useState(null); // { inst, notes, customMood }
+  const [moveInstance, setMoveInstance] = useState(null); // { inst, fromDayId, targetDayId }
 
   useEffect(() => {
     let mounted = true;
@@ -133,9 +153,14 @@ export default function WeekendPlannar() {
   async function addActivity(day) {
     if (!selectedActivityId) return;
     const nextOrder = day.activity_instances?.length || 0;
+    const parsed =
+      typeof orderHint === "string" && orderHint.trim() !== ""
+        ? parseInt(orderHint, 10)
+        : NaN;
+    const order = Number.isFinite(parsed) ? parsed : nextOrder;
     const created = await addActivityToDay(day.id, {
       activityId: selectedActivityId,
-      order: nextOrder,
+      order,
     });
     // Update local state
     setWeekends((prev) =>
@@ -160,7 +185,7 @@ export default function WeekendPlannar() {
     );
     setShowAddActivityForDay(null);
     setSelectedActivityId("");
-    setOrderHint(0);
+    setOrderHint("");
   }
 
   async function removeInstance(inst) {
@@ -197,9 +222,219 @@ export default function WeekendPlannar() {
     );
   }
 
+  // Add a new day to the selected weekend
+  async function handleAddDay(e) {
+    e?.preventDefault?.();
+    if (!selectedWeekend) return;
+    if (!newDayForm.date) return;
+    const created = await createDayForWeekend(selectedWeekend.id, {
+      date: newDayForm.date,
+      dayLabel: newDayForm.dayLabel || undefined,
+    });
+    setWeekends((prev) =>
+      prev.map((w) =>
+        w.id === selectedWeekend.id
+          ? {
+              ...w,
+              days: [...(w.days || []), created].sort(
+                (a, b) => new Date(a.date) - new Date(b.date)
+              ),
+            }
+          : w
+      )
+    );
+    setShowAddDay(false);
+    setNewDayForm({ date: "", dayLabel: "" });
+  }
+
+  // Edit day label
+  function openEditDay(day) {
+    setShowEditDay(day);
+    setEditDayLabel(day.day_label || "");
+  }
+  async function handleSaveDayLabel(e) {
+    e?.preventDefault?.();
+    if (!selectedWeekend || !showEditDay) return;
+    const updated = await updateDayForWeekend(
+      selectedWeekend.id,
+      showEditDay.id,
+      {
+        dayLabel: editDayLabel,
+      }
+    );
+    setWeekends((prev) =>
+      prev.map((w) =>
+        w.id === selectedWeekend.id
+          ? {
+              ...w,
+              days: (w.days || []).map((d) =>
+                d.id === showEditDay.id ? { ...d, ...updated } : d
+              ),
+            }
+          : w
+      )
+    );
+    setShowEditDay(null);
+    setEditDayLabel("");
+  }
+
+  // Reorder an instance within a day (swap with neighbor)
+  async function reorderInstance(day, inst, dir) {
+    const list = (day.activity_instances || [])
+      .slice()
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const idx = list.findIndex((i) => i.id === inst.id);
+    if (idx < 0) return;
+    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    const a = list[idx];
+    const b = list[swapIdx];
+    // swap orders
+    const aOrder = a.order ?? idx;
+    const bOrder = b.order ?? swapIdx;
+    await Promise.all([
+      updateActivityInstance(a.id, { order: bOrder }),
+      updateActivityInstance(b.id, { order: aOrder }),
+    ]);
+    // update local
+    setWeekends((prev) =>
+      prev.map((w) =>
+        w.id === day.weekend_plan_id
+          ? {
+              ...w,
+              days: (w.days || []).map((d) =>
+                d.id === day.id
+                  ? {
+                      ...d,
+                      activity_instances: (d.activity_instances || []).map(
+                        (i) =>
+                          i.id === a.id
+                            ? { ...i, order: bOrder }
+                            : i.id === b.id
+                            ? { ...i, order: aOrder }
+                            : i
+                      ),
+                    }
+                  : d
+              ),
+            }
+          : w
+      )
+    );
+  }
+
+  // Clear completed instances from a day
+  async function clearCompleted(day) {
+    const list = (day.activity_instances || []).filter((i) => !!i.is_completed);
+    await Promise.all(list.map((i) => deleteActivityInstance(i.id)));
+    setWeekends((prev) =>
+      prev.map((w) =>
+        w.id === day.weekend_plan_id
+          ? {
+              ...w,
+              days: (w.days || []).map((d) =>
+                d.id === day.id
+                  ? {
+                      ...d,
+                      activity_instances: (d.activity_instances || []).filter(
+                        (i) => !i.is_completed
+                      ),
+                    }
+                  : d
+              ),
+            }
+          : w
+      )
+    );
+  }
+
+  // Edit instance notes/mood
+  function openEditInstance(inst) {
+    setEditInstance({
+      inst,
+      notes: inst.notes || "",
+      customMood: inst.custom_mood || "",
+    });
+  }
+  async function handleSaveInstance() {
+    if (!editInstance) return;
+    const { inst, notes, customMood } = editInstance;
+    const updated = await updateActivityInstance(inst.id, {
+      notes,
+      customMood,
+    });
+    setWeekends((prev) =>
+      prev.map((w) => ({
+        ...w,
+        days: (w.days || []).map((d) => ({
+          ...d,
+          activity_instances: (d.activity_instances || []).map((i) =>
+            i.id === inst.id ? { ...i, ...updated } : i
+          ),
+        })),
+      }))
+    );
+    setEditInstance(null);
+  }
+
+  // Move instance to another day (create in target, delete from source)
+  function openMove(inst, fromDayId) {
+    const targetDefault =
+      (selectedWeekend?.days || []).find((d) => d.id !== fromDayId)?.id ||
+      fromDayId;
+    setMoveInstance({ inst, fromDayId, targetDayId: targetDefault });
+  }
+  async function handleMoveInstance() {
+    if (!moveInstance) return;
+    const { inst, fromDayId, targetDayId } = moveInstance;
+    if (!targetDayId || targetDayId === fromDayId) {
+      setMoveInstance(null);
+      return;
+    }
+    const targetDay = (selectedWeekend?.days || []).find(
+      (d) => d.id === targetDayId
+    );
+    const nextOrder = targetDay?.activity_instances?.length || 0;
+    const created = await addActivityToDay(targetDayId, {
+      activityId: inst.activity_id,
+      order: nextOrder,
+    });
+    await deleteActivityInstance(inst.id);
+    setWeekends((prev) =>
+      prev.map((w) =>
+        w.id === selectedWeekend.id
+          ? {
+              ...w,
+              days: (w.days || []).map((d) => {
+                if (d.id === fromDayId) {
+                  return {
+                    ...d,
+                    activity_instances: (d.activity_instances || []).filter(
+                      (i) => i.id !== inst.id
+                    ),
+                  };
+                }
+                if (d.id === targetDayId) {
+                  return {
+                    ...d,
+                    activity_instances: [
+                      ...(d.activity_instances || []),
+                      created,
+                    ],
+                  };
+                }
+                return d;
+              }),
+            }
+          : w
+      )
+    );
+    setMoveInstance(null);
+  }
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
+    <section className="space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
           <CalendarPlus /> Weekend Planner
         </h1>
@@ -219,7 +454,11 @@ export default function WeekendPlannar() {
             <div className="card bg-base-200">
               <div className="card-body">
                 <h2 className="card-title">Your Weekends</h2>
-                <div className="space-y-2 max-h-[65vh] overflow-auto pr-1">
+                <div
+                  className="space-y-2 max-h-[65vh] overflow-auto pr-1"
+                  role="list"
+                  aria-label="Your weekends"
+                >
                   {(weekends || []).map((w) => (
                     <div
                       key={w.id}
@@ -228,7 +467,16 @@ export default function WeekendPlannar() {
                           ? "border-primary"
                           : "border-base-300"
                       }`}
+                      role="button"
+                      aria-pressed={selectedId === w.id}
+                      tabIndex={0}
                       onClick={() => setSelectedId(w.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedId(w.id);
+                        }
+                      }}
                     >
                       <div>
                         <div className="font-medium">{w.title}</div>
@@ -243,6 +491,7 @@ export default function WeekendPlannar() {
                       <div className="flex items-center gap-2">
                         <button
                           className="btn btn-xs"
+                          aria-label={`Edit ${w.title}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             openEdit(w);
@@ -252,6 +501,7 @@ export default function WeekendPlannar() {
                         </button>
                         <button
                           className="btn btn-xs btn-error"
+                          aria-label={`Delete ${w.title}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteWeekend(w.id);
@@ -263,7 +513,7 @@ export default function WeekendPlannar() {
                     </div>
                   ))}
                   {(!weekends || weekends.length === 0) && (
-                    <div className="text-sm opacity-70">
+                    <div className="text-sm opacity-70 p-3 rounded-box bg-base-100">
                       No weekends yet. Create one to start planning.
                     </div>
                   )}
@@ -290,12 +540,22 @@ export default function WeekendPlannar() {
                         ).toLocaleDateString()}
                       </div>
                     </div>
-                    <button
-                      className="btn btn-ghost"
-                      onClick={() => openEdit(selectedWeekend)}
-                    >
-                      <Edit3 size={16} /> Edit
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => setShowAddDay(true)}
+                        aria-label="Add day"
+                      >
+                        <Plus size={16} /> Add Day
+                      </button>
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => openEdit(selectedWeekend)}
+                        aria-label="Edit weekend"
+                      >
+                        <Edit3 size={16} /> Edit
+                      </button>
+                    </div>
                   </div>
 
                   <div className="divider my-2" />
@@ -315,8 +575,32 @@ export default function WeekendPlannar() {
                             })}
                           </div>
                           <div className="flex items-center gap-2">
+                            <span className="text-xs opacity-70 mr-2">
+                              {`${
+                                (day.activity_instances || []).filter(
+                                  (i) => i.is_completed
+                                ).length
+                              } / ${
+                                (day.activity_instances || []).length
+                              } completed`}
+                            </span>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              aria-label="Rename day"
+                              onClick={() => openEditDay(day)}
+                            >
+                              <Edit3 size={14} /> Rename
+                            </button>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              aria-label="Clear completed"
+                              onClick={() => clearCompleted(day)}
+                            >
+                              <Trash2 size={14} /> Clear Completed
+                            </button>
                             <button
                               className="btn btn-sm"
+                              aria-label="Add activity"
                               onClick={() => setShowAddActivityForDay(day)}
                             >
                               <Plus size={14} /> Add Activity
@@ -345,6 +629,38 @@ export default function WeekendPlannar() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
+                                    <button
+                                      className="btn btn-xs"
+                                      aria-label="Move up"
+                                      onClick={() =>
+                                        reorderInstance(day, inst, "up")
+                                      }
+                                    >
+                                      <ArrowUp size={12} />
+                                    </button>
+                                    <button
+                                      className="btn btn-xs"
+                                      aria-label="Move down"
+                                      onClick={() =>
+                                        reorderInstance(day, inst, "down")
+                                      }
+                                    >
+                                      <ArrowDown size={12} />
+                                    </button>
+                                    <button
+                                      className="btn btn-xs"
+                                      aria-label="Edit notes and mood"
+                                      onClick={() => openEditInstance(inst)}
+                                    >
+                                      <StickyNote size={12} />
+                                    </button>
+                                    <button
+                                      className="btn btn-xs"
+                                      aria-label="Move to another day"
+                                      onClick={() => openMove(inst, day.id)}
+                                    >
+                                      <MoveRight size={12} />
+                                    </button>
                                     <input
                                       type="checkbox"
                                       className="toggle toggle-sm"
@@ -353,6 +669,10 @@ export default function WeekendPlannar() {
                                     />
                                     <button
                                       className="btn btn-xs btn-error"
+                                      aria-label={`Remove ${
+                                        activityMap.get(inst.activity_id)
+                                          ?.title || "activity"
+                                      }`}
                                       onClick={() => removeInstance(inst)}
                                     >
                                       <Trash2 size={12} />
@@ -613,7 +933,7 @@ export default function WeekendPlannar() {
                   min={0}
                   className="input input-bordered w-full"
                   value={orderHint}
-                  onChange={(e) => setOrderHint(Number(e.target.value) || 0)}
+                  onChange={(e) => setOrderHint(e.target.value)}
                 />
                 <div className="label">
                   <span className="label-text-alt opacity-70">
@@ -646,6 +966,240 @@ export default function WeekendPlannar() {
           </form>
         </dialog>
       )}
-    </div>
+
+      {showAddDay && selectedWeekend && (
+        <dialog className="modal modal-open modal-bottom sm:modal-middle">
+          <div className="modal-box w-full max-w-md relative">
+            <button
+              aria-label="Close"
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setShowAddDay(false)}
+            >
+              ✕
+            </button>
+            <h3 className="font-bold text-lg text-center">Add Day</h3>
+            <form className="mt-4 space-y-4" onSubmit={handleAddDay}>
+              <label className="form-control w-full text-start">
+                <div className="label justify-start text-left w-full">
+                  <span className="label-text">Date</span>
+                </div>
+                <input
+                  type="date"
+                  className="input input-bordered w-full"
+                  value={newDayForm.date}
+                  onChange={(e) =>
+                    setNewDayForm((f) => ({ ...f, date: e.target.value }))
+                  }
+                  required
+                />
+              </label>
+              <label className="form-control w-full text-start">
+                <div className="label justify-start text-left w-full">
+                  <span className="label-text">Label (optional)</span>
+                </div>
+                <input
+                  className="input input-bordered w-full"
+                  value={newDayForm.dayLabel}
+                  onChange={(e) =>
+                    setNewDayForm((f) => ({ ...f, dayLabel: e.target.value }))
+                  }
+                />
+              </label>
+              <div className="modal-action mt-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setShowAddDay(false)}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-primary" type="submit">
+                  Add Day
+                </button>
+              </div>
+            </form>
+          </div>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setShowAddDay(false)}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {showEditDay && selectedWeekend && (
+        <dialog className="modal modal-open modal-bottom sm:modal-middle">
+          <div className="modal-box w-full max-w-md relative">
+            <button
+              aria-label="Close"
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setShowEditDay(null)}
+            >
+              ✕
+            </button>
+            <h3 className="font-bold text-lg text-center">Rename Day</h3>
+            <form className="mt-4 space-y-4" onSubmit={handleSaveDayLabel}>
+              <label className="form-control w-full text-start">
+                <div className="label justify-start text-left w-full">
+                  <span className="label-text">Label</span>
+                </div>
+                <input
+                  className="input input-bordered w-full"
+                  value={editDayLabel}
+                  onChange={(e) => setEditDayLabel(e.target.value)}
+                />
+              </label>
+              <div className="modal-action mt-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setShowEditDay(null)}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-primary" type="submit">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setShowEditDay(null)}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {editInstance && (
+        <dialog className="modal modal-open modal-bottom sm:modal-middle">
+          <div className="modal-box w-full max-w-md relative">
+            <button
+              aria-label="Close"
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setEditInstance(null)}
+            >
+              ✕
+            </button>
+            <h3 className="font-bold text-lg text-center">Edit Notes & Mood</h3>
+            <div className="mt-4 space-y-4">
+              <label className="form-control w-full text-start">
+                <div className="label justify-start text-left w-full">
+                  <span className="label-text">Notes</span>
+                </div>
+                <textarea
+                  className="textarea textarea-bordered w-full"
+                  value={editInstance.notes}
+                  onChange={(e) =>
+                    setEditInstance((v) => ({ ...v, notes: e.target.value }))
+                  }
+                />
+              </label>
+              <label className="form-control w-full text-start">
+                <div className="label justify-start text-left w-full">
+                  <span className="label-text">Custom Mood</span>
+                </div>
+                <input
+                  className="input input-bordered w-full"
+                  value={editInstance.customMood}
+                  onChange={(e) =>
+                    setEditInstance((v) => ({
+                      ...v,
+                      customMood: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+            <div className="modal-action mt-2">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setEditInstance(null)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={handleSaveInstance}>
+                Save
+              </button>
+            </div>
+          </div>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setEditInstance(null)}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {moveInstance && selectedWeekend && (
+        <dialog className="modal modal-open modal-bottom sm:modal-middle">
+          <div className="modal-box w-full max-w-md relative">
+            <button
+              aria-label="Close"
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setMoveInstance(null)}
+            >
+              ✕
+            </button>
+            <h3 className="font-bold text-lg text-center">Move Activity</h3>
+            <div className="mt-4 space-y-4">
+              <label className="form-control w-full text-start">
+                <div className="label justify-start text-left w-full">
+                  <span className="label-text">Target day</span>
+                </div>
+                <select
+                  className="select select-bordered w-full"
+                  value={moveInstance.targetDayId}
+                  onChange={(e) =>
+                    setMoveInstance((v) => ({
+                      ...v,
+                      targetDayId: e.target.value,
+                    }))
+                  }
+                >
+                  {(selectedWeekend.days || []).map((d) => (
+                    <option
+                      key={d.id}
+                      value={d.id}
+                      disabled={d.id === moveInstance.fromDayId}
+                    >
+                      {new Date(d.date).toLocaleDateString(undefined, {
+                        weekday: "long",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="modal-action mt-2">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setMoveInstance(null)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={handleMoveInstance}>
+                Move
+              </button>
+            </div>
+          </div>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setMoveInstance(null)}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+    </section>
   );
 }

@@ -58,42 +58,51 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <>
-      <main className="p-10">
-        <div className="flex w-full flex-col">
-          <div className="flex justify-between items-center">
-            <h2 className="text-start text-4xl font-bold  ">
-              Upcoming Activities
-            </h2>
-            <button
-              className="btn btn-accent"
-              onClick={() => document.getElementById("my_modal_5").showModal()}
-            >
-              Add New Activity{" "}
-            </button>
-            <NewActicityModal></NewActicityModal>
-          </div>
-          <div className="flex gap-4 overflow-x-auto py-4">
-            {activities?.items.map((item, index) => (
-              <ActivityCard key={index} data={item}></ActivityCard>
-            ))}
-          </div>
+    <section className="space-y-8">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-left">
+          Upcoming Activities
+        </h1>
+        <button
+          className="btn btn-primary"
+          onClick={() => document.getElementById("my_modal_5").showModal()}
+        >
+          Add Activity
+        </button>
+        <NewActicityModal />
+      </header>
 
-          <div className="divider py-4"></div>
-          <div className="flex justify-between items-center">
-            <h2 className="text-start text-4xl font-bold  ">
-              Upcoming Weekends
-            </h2>
-            <button onClick={() => document.getElementById("my_modal_4").showModal()} className="btn btn-accent">Add New Weekend </button>
-            <NewWeekendModal></NewWeekendModal>
-          </div>
-          <div className="flex gap-4 overflow-x-auto py-4">
-            {weekends?.map((item, index) => (
-              <WeekendCard key={index} data={item}></WeekendCard>
-            ))}
-          </div>
-        </div>
-      </main>
-    </>
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+        {activities?.items?.length ? (
+          activities.items.map((item, index) => (
+            <ActivityCard key={index} data={item} />
+          ))
+        ) : (
+          <div className="text-sm opacity-70">No activities yet.</div>
+        )}
+      </div>
+
+      <div className="divider" />
+
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-left">
+          Upcoming Weekends
+        </h2>
+        <button
+          onClick={() => document.getElementById("my_modal_4").showModal()}
+          className="btn btn-primary"
+        >
+          New Weekend
+        </button>
+        <NewWeekendModal />
+      </header>
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
+        {weekends?.length ? (
+          weekends.map((item, index) => <WeekendCard key={index} data={item} />)
+        ) : (
+          <div className="text-sm opacity-70">No weekends planned yet.</div>
+        )}
+      </div>
+    </section>
   );
 }

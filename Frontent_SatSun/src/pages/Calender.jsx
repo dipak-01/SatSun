@@ -117,8 +117,12 @@ export default function Calender() {
   }, [modalDate, byDate]);
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
+    <section className="space-y-6">
+      <div
+        className="flex items-center justify-between"
+        role="region"
+        aria-label="Calendar controls"
+      >
         <div className="flex items-center gap-3">
           <CalendarIcon />
           <h1 className="text-2xl font-semibold">
@@ -131,12 +135,14 @@ export default function Calender() {
         <div className="join">
           <button
             className="btn btn-ghost join-item"
+            aria-label="Previous month"
             onClick={() => setMonthDate((d) => addMonths(d, -1))}
           >
             <ChevronLeft />
           </button>
           <button
             className="btn btn-ghost join-item"
+            aria-label="Go to current month"
             onClick={() =>
               setMonthDate(
                 new Date(new Date().getFullYear(), new Date().getMonth(), 1)
@@ -147,6 +153,7 @@ export default function Calender() {
           </button>
           <button
             className="btn btn-ghost join-item"
+            aria-label="Next month"
             onClick={() => setMonthDate((d) => addMonths(d, 1))}
           >
             <ChevronRight />
@@ -168,7 +175,11 @@ export default function Calender() {
           <span className="loading loading-dots loading-lg" />
         </div>
       ) : (
-        <div className="grid grid-cols-7 gap-px bg-base-300 rounded-box overflow-hidden">
+        <div
+          className="grid grid-cols-7 gap-px bg-base-300 rounded-box overflow-hidden"
+          role="grid"
+          aria-label="Monthly calendar"
+        >
           {daysGrid.map((d, idx) => {
             const key = localKey(d);
             const entry = byDate.get(key);
@@ -178,8 +189,17 @@ export default function Calender() {
             return (
               <div
                 key={idx}
+                role="gridcell"
+                aria-selected={false}
+                tabIndex={0}
                 className={`${cellClass} min-h-28 p-2 cursor-pointer hover:bg-base-200 transition-colors`}
                 onClick={() => setModalDate(d)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setModalDate(d);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between mb-1">
                   <div
@@ -317,6 +337,6 @@ export default function Calender() {
           </form>
         </dialog>
       )}
-    </div>
+    </section>
   );
 }
