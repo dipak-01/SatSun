@@ -85,11 +85,11 @@ function Navbar() {
               role="menu"
               className="dropdown-content menu bg-base-200 rounded-box w-56 p-2 shadow"
             >
-              <li>
+              {/* <li>
                 <Link role="menuitem" to="/weekend">
                   Weekend
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link role="menuitem" to="/weekend-planner">
                   Planner

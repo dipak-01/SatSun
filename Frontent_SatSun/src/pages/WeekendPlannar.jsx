@@ -6,8 +6,8 @@ import {
   Plus,
   ArrowUp,
   ArrowDown,
-  StickyNote,
   MoveRight,
+  MoreVertical,
 } from "lucide-react";
 import {
   getWeekends,
@@ -24,6 +24,9 @@ import {
 } from "../lib/api";
 import { exportNodeToPng } from "../lib/exportImage";
 import ExportWeekendCard from "../components/ExportWeekendCard";
+import TemplateGallery from "../components/Templates/TemplateGallery";
+import ApplyTemplateModal from "../components/Templates/ApplyTemplateModal";
+import { WEEKEND_TEMPLATES, matchActivityId } from "../lib/templates";
 
 function toISODate(d) {
   if (!d) return "";
@@ -59,9 +62,14 @@ export default function WeekendPlannar() {
   const [newDayForm, setNewDayForm] = useState({ date: "", dayLabel: "" });
   const [showEditDay, setShowEditDay] = useState(null); // holds day to edit
   const [editDayLabel, setEditDayLabel] = useState("");
-  const [editInstance, setEditInstance] = useState(null); // { inst, notes, customMood }
+  // Instance edit UI removed per request
   const [moveInstance, setMoveInstance] = useState(null); // { inst, fromDayId, targetDayId }
   const exportRef = useRef(null);
+
+  // Templates UI state
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -350,34 +358,7 @@ export default function WeekendPlannar() {
     );
   }
 
-  // Edit instance notes/mood
-  function openEditInstance(inst) {
-    setEditInstance({
-      inst,
-      notes: inst.notes || "",
-      customMood: inst.custom_mood || "",
-    });
-  }
-  async function handleSaveInstance() {
-    if (!editInstance) return;
-    const { inst, notes, customMood } = editInstance;
-    const updated = await updateActivityInstance(inst.id, {
-      notes,
-      customMood,
-    });
-    setWeekends((prev) =>
-      prev.map((w) => ({
-        ...w,
-        days: (w.days || []).map((d) => ({
-          ...d,
-          activity_instances: (d.activity_instances || []).map((i) =>
-            i.id === inst.id ? { ...i, ...updated } : i
-          ),
-        })),
-      }))
-    );
-    setEditInstance(null);
-  }
+  // Notes & custom mood editing removed
 
   // Move instance to another day (create in target, delete from source)
   function openMove(inst, fromDayId) {
@@ -436,11 +417,14 @@ export default function WeekendPlannar() {
 
   return (
     <section className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
+      <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
+        <h1 className="text-2xl font-semibold flex items-center gap-2 break-words">
           <CalendarPlus /> Weekend Planner
         </h1>
-        <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+        <button
+          className="btn btn-primary w-full sm:w-auto"
+          onClick={() => setShowCreate(true)}
+        >
           <Plus size={16} /> New Weekend
         </button>
       </div>
@@ -529,10 +513,12 @@ export default function WeekendPlannar() {
             {selectedWeekend ? (
               <div className="card bg-base-100">
                 <div className="card-body">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="card-title">{selectedWeekend.title}</h2>
-                      <div className="text-sm opacity-70">
+                  <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
+                    <div className="min-w-0">
+                      <h2 className="card-title break-words">
+                        {selectedWeekend.title}
+                      </h2>
+                      <div className="text-sm opacity-70 break-words">
                         {new Date(
                           selectedWeekend.start_date
                         ).toLocaleDateString()}{" "}
@@ -542,7 +528,14 @@ export default function WeekendPlannar() {
                         ).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => setShowTemplates(true)}
+                        aria-label="Templates"
+                      >
+                        Templates
+                      </button>
                       <button
                         className="btn btn-ghost"
                         onClick={() => setShowAddDay(true)}
@@ -584,15 +577,15 @@ export default function WeekendPlannar() {
                         key={day.id}
                         className="rounded-box border border-base-300"
                       >
-                        <div className="flex items-center justify-between p-3 bg-base-200 rounded-t-box">
-                          <div className="font-medium">
+                        <div className="flex items-start sm:items-center justify-between p-3 bg-base-200 rounded-t-box gap-2 flex-col sm:flex-row">
+                          <div className="font-medium break-words">
                             {new Date(day.date).toLocaleDateString(undefined, {
                               weekday: "long",
                               month: "short",
                               day: "numeric",
                             })}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs opacity-70 mr-2">
                               {`${
                                 (day.activity_instances || []).filter(
@@ -647,54 +640,63 @@ export default function WeekendPlannar() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      className="btn btn-xs"
-                                      aria-label="Move up"
-                                      onClick={() =>
-                                        reorderInstance(day, inst, "up")
-                                      }
-                                    >
-                                      <ArrowUp size={12} />
-                                    </button>
-                                    <button
-                                      className="btn btn-xs"
-                                      aria-label="Move down"
-                                      onClick={() =>
-                                        reorderInstance(day, inst, "down")
-                                      }
-                                    >
-                                      <ArrowDown size={12} />
-                                    </button>
-                                    <button
-                                      className="btn btn-xs"
-                                      aria-label="Edit notes and mood"
-                                      onClick={() => openEditInstance(inst)}
-                                    >
-                                      <StickyNote size={12} />
-                                    </button>
-                                    <button
-                                      className="btn btn-xs"
-                                      aria-label="Move to another day"
-                                      onClick={() => openMove(inst, day.id)}
-                                    >
-                                      <MoveRight size={12} />
-                                    </button>
                                     <input
                                       type="checkbox"
                                       className="toggle toggle-sm"
                                       checked={!!inst.is_completed}
                                       onChange={() => toggleComplete(inst)}
+                                      aria-label="Completed"
                                     />
-                                    <button
-                                      className="btn btn-xs btn-error"
-                                      aria-label={`Remove ${
-                                        activityMap.get(inst.activity_id)
-                                          ?.title || "activity"
-                                      }`}
-                                      onClick={() => removeInstance(inst)}
-                                    >
-                                      <Trash2 size={12} />
-                                    </button>
+                                    <div className="dropdown dropdown-end">
+                                      <button
+                                        className="btn btn-xs"
+                                        aria-label="More actions"
+                                        tabIndex={0}
+                                      >
+                                        <MoreVertical size={12} />
+                                      </button>
+                                      <ul
+                                        tabIndex={0}
+                                        className="dropdown-content menu menu-sm bg-base-100 rounded-box z-[1] mt-2 w-48 p-2 shadow"
+                                      >
+                                        <li>
+                                          <button
+                                            onClick={() =>
+                                              reorderInstance(day, inst, "up")
+                                            }
+                                          >
+                                            <ArrowUp size={12} /> Move up
+                                          </button>
+                                        </li>
+                                        <li>
+                                          <button
+                                            onClick={() =>
+                                              reorderInstance(day, inst, "down")
+                                            }
+                                          >
+                                            <ArrowDown size={12} /> Move down
+                                          </button>
+                                        </li>
+                                        <li>
+                                          <button
+                                            onClick={() =>
+                                              openMove(inst, day.id)
+                                            }
+                                          >
+                                            <MoveRight size={12} /> Move
+                                            activity
+                                          </button>
+                                        </li>
+                                        <li>
+                                          <button
+                                            className="text-error"
+                                            onClick={() => removeInstance(inst)}
+                                          >
+                                            <Trash2 size={12} /> Delete
+                                          </button>
+                                        </li>
+                                      </ul>
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -1093,67 +1095,7 @@ export default function WeekendPlannar() {
         </dialog>
       )}
 
-      {editInstance && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-md relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setEditInstance(null)}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">Edit Notes & Mood</h3>
-            <div className="mt-4 space-y-4">
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Notes</span>
-                </div>
-                <textarea
-                  className="textarea textarea-bordered w-full"
-                  value={editInstance.notes}
-                  onChange={(e) =>
-                    setEditInstance((v) => ({ ...v, notes: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Custom Mood</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editInstance.customMood}
-                  onChange={(e) =>
-                    setEditInstance((v) => ({
-                      ...v,
-                      customMood: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-            <div className="modal-action mt-2">
-              <button
-                className="btn btn-ghost"
-                onClick={() => setEditInstance(null)}
-              >
-                Cancel
-              </button>
-              <button className="btn btn-primary" onClick={handleSaveInstance}>
-                Save
-              </button>
-            </div>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setEditInstance(null)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      {/* Notes & custom mood modal removed */}
 
       {moveInstance && selectedWeekend && (
         <dialog className="modal modal-open modal-bottom sm:modal-middle">
@@ -1231,6 +1173,143 @@ export default function WeekendPlannar() {
             activityMap={activityMap}
           />
         </div>
+      )}
+
+      {/* Templates gallery modal */}
+      {showTemplates && (
+        <dialog className="modal modal-open modal-bottom sm:modal-middle">
+          <div className="modal-box w-full max-w-2xl relative">
+            <button
+              aria-label="Close"
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => setShowTemplates(false)}
+            >
+              ✕
+            </button>
+            <h3 className="font-bold text-lg text-center">Weekend templates</h3>
+            <p className="text-sm opacity-70 text-center mt-1">
+              Pick a template to quickly plan your weekend.
+            </p>
+            <div className="mt-4">
+              <TemplateGallery
+                templates={WEEKEND_TEMPLATES}
+                onSelect={(t) => {
+                  setSelectedTemplate(t);
+                  setApplyTemplateOpen(true);
+                  setShowTemplates(false);
+                }}
+              />
+            </div>
+          </div>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setShowTemplates(false)}
+          >
+            <button>close</button>
+          </form>
+        </dialog>
+      )}
+
+      {/* Apply template modal */}
+      {applyTemplateOpen && selectedTemplate && (
+        <ApplyTemplateModal
+          open={applyTemplateOpen}
+          onClose={() => setApplyTemplateOpen(false)}
+          template={selectedTemplate}
+          activities={activities}
+          matchActivityId={matchActivityId}
+          onApply={async ({
+            title,
+            startDateIso,
+            endDateIso,
+            dayTemplates,
+          }) => {
+            // basic guard
+            if (!startDateIso) return;
+            // Helper to add days
+            const addDays = (iso, n) => {
+              const d = new Date(iso);
+              d.setDate(d.getDate() + n);
+              return d.toISOString();
+            };
+            // Build date list based on provided range
+            const dates = [];
+            if (endDateIso) {
+              const start = new Date(startDateIso);
+              const end = new Date(endDateIso);
+              for (
+                let d = new Date(start);
+                d <= end;
+                d.setDate(d.getDate() + 1)
+              ) {
+                dates.push(new Date(d).toISOString());
+              }
+            }
+            let dateList = dates.length ? dates : [];
+            if (!dateList.length) {
+              // default to template length (min 1)
+              const len = Math.max(1, dayTemplates?.length || 2);
+              for (let i = 0; i < len; i++)
+                dateList.push(addDays(startDateIso, i));
+            }
+            // If mismatch with template days, clamp to template length
+            if (
+              dayTemplates?.length &&
+              dateList.length !== dayTemplates.length
+            ) {
+              dateList = dateList.slice(0, dayTemplates.length);
+              while (dateList.length < dayTemplates.length) {
+                dateList.push(addDays(startDateIso, dateList.length));
+              }
+            }
+
+            // Prepare explicit days payload to ensure correct count/labels
+            const daysPayload = (dayTemplates || []).map((dt, idx) => ({
+              date: dateList[idx] || addDays(startDateIso, idx),
+              dayLabel: dt.label || undefined,
+              order: idx,
+            }));
+
+            // Compute final end date from dateList
+            const finalEnd = dateList[dateList.length - 1] || startDateIso;
+
+            // Create weekend with days
+            const created = await createWeekend({
+              title,
+              startDate: startDateIso,
+              endDate: finalEnd,
+              days: daysPayload,
+            });
+
+            // Add activities to each day
+            const newDays = (created.days || []).map((d) => ({
+              ...d,
+              activity_instances: [],
+            }));
+            for (let idx = 0; idx < (dayTemplates || []).length; idx++) {
+              const dt = dayTemplates[idx];
+              const dayRow = newDays[idx];
+              if (!dayRow) continue;
+              const queries = dt.activities || [];
+              for (let i = 0; i < queries.length; i++) {
+                const q = queries[i];
+                const aId = matchActivityId(activities, q);
+                if (!aId) continue;
+                const inst = await addActivityToDay(dayRow.id, {
+                  activityId: aId,
+                  order: i,
+                });
+                dayRow.activity_instances.push(inst);
+              }
+            }
+
+            const createdWithInstances = { ...created, days: newDays };
+            setWeekends((prev) => [createdWithInstances, ...prev]);
+            setSelectedId(created.id);
+            setApplyTemplateOpen(false);
+          }}
+        />
       )}
     </section>
   );

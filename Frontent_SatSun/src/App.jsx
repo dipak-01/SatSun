@@ -8,6 +8,7 @@ import Register from "./pages/Register";
  
 import WeekendPlannar from "./pages/WeekendPlannar";
 import Calender from "./pages/Calender";
+import Timeline from "./pages/Timeline";
 import Activity from "./pages/Activity";
 
 const App = () => {
@@ -18,9 +19,10 @@ const App = () => {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />}></Route>
-         
+
             <Route path="/weekend-planner" element={<WeekendPlannar />}></Route>
             <Route path="/calendar" element={<Calender />}></Route>
+            <Route path="/timeline" element={<Timeline />}></Route>
             <Route path="/activities" element={<Activity />}></Route>
             <Route path="/login" element={<Login />}></Route>
             <Route path="/register" element={<Register />}></Route>

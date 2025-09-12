@@ -20,10 +20,10 @@ router.post("/", catalogCreate);
 router.put("/:id", catalogUpdate);
 router.delete("/:id", catalogDelete);
 
-// Instances (registered after catalog to avoid route conflicts)
-router.put("/:instanceId", updateActivityInstance);
-router.delete("/:instanceId", deleteActivityInstance);
-router.post("/:instanceId/complete", toggleCompleteActivity);
+// Instances (use distinct prefix to avoid conflicts with catalog :id)
+router.put("/instances/:instanceId", updateActivityInstance);
+router.delete("/instances/:instanceId", deleteActivityInstance);
+router.post("/instances/:instanceId/complete", toggleCompleteActivity);
 router.post("/day/:dayId/instances", addActivityToDay);
 
 export default router;

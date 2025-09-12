@@ -6,6 +6,7 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { getActivities, getWeekends } from "../lib/api";
+import Timeline from "./Timeline";
 
 function startOfMonth(d) {
   const nd = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -53,6 +54,13 @@ export default function Calender() {
   const [weekends, setWeekends] = useState([]);
   const [activities, setActivities] = useState([]);
   const [modalDate, setModalDate] = useState(null);
+  const [view, setView] = useState(() => {
+    // Default to timeline on small screens
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 640 ? "timeline" : "calendar";
+    }
+    return "calendar";
+  });
   const navigate = useNavigate();
 
   // Weekend helpers
@@ -139,55 +147,90 @@ export default function Calender() {
             })}
           </h1>
         </div>
-        <div className="join">
-          <button
-            className="btn btn-ghost join-item"
-            aria-label="Previous month"
-            onClick={() => setMonthDate((d) => addMonths(d, -1))}
+        <div className="flex items-center gap-3">
+          {/* View switch on desktop/tablet */}
+          <div
+            className="hidden sm:flex items-center gap-2"
+            role="tablist"
+            aria-label="View switch"
           >
-            <ChevronLeft />
-          </button>
-          <button
-            className="btn btn-ghost join-item"
-            aria-label="Go to current month"
-            onClick={() =>
-              setMonthDate(
-                new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-              )
-            }
-          >
-            Today
-          </button>
-          <button
-            className="btn btn-ghost join-item"
-            aria-label="Next month"
-            onClick={() => setMonthDate((d) => addMonths(d, 1))}
-          >
-            <ChevronRight />
-          </button>
+            <button
+              role="tab"
+              aria-selected={view === "calendar"}
+              className={`btn btn-sm ${
+                view === "calendar" ? "btn-primary" : "btn-ghost"
+              }`}
+              onClick={() => setView("calendar")}
+            >
+              Calendar
+            </button>
+            <button
+              role="tab"
+              aria-selected={view === "timeline"}
+              className={`btn btn-sm ${
+                view === "timeline" ? "btn-primary" : "btn-ghost"
+              }`}
+              onClick={() => setView("timeline")}
+            >
+              Timeline
+            </button>
+          </div>
+          <div className="join">
+            <button
+              className="btn btn-ghost join-item"
+              aria-label="Previous month"
+              onClick={() => setMonthDate((d) => addMonths(d, -1))}
+            >
+              <ChevronLeft />
+            </button>
+            <button
+              className="btn btn-ghost join-item"
+              aria-label="Go to current month"
+              onClick={() =>
+                setMonthDate(
+                  new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+                )
+              }
+            >
+              Today
+            </button>
+            <button
+              className="btn btn-ghost join-item"
+              aria-label="Next month"
+              onClick={() => setMonthDate((d) => addMonths(d, 1))}
+            >
+              <ChevronRight />
+            </button>
+          </div>
         </div>
       </div>
-      {/* Weekday header */}
-      <div className="grid grid-cols-7 text-sm opacity-70 mb-2">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((w) => {
-          const isWknd = w === "Sun" || w === "Sat";
-          return (
-            <div key={w} className="px-2 py-1">
-              {isWknd && (
-                <span role="img" aria-label="weekend" className="mr-1">
-                  {weekendEmoji}
-                </span>
-              )}
-              {w}
-            </div>
-          );
-        })}
-      </div>
-      ;
+
+      {/* Weekday header (hidden in timeline view and on mobile) */}
+      {view === "calendar" && (
+        <div className="hidden sm:grid grid-cols-7 text-sm opacity-70 mb-2">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((w) => {
+            const isWknd = w === "Sun" || w === "Sat";
+            return (
+              <div key={w} className="px-2 py-1">
+                {isWknd && (
+                  <span role="img" aria-label="weekend" className="mr-1">
+                    {weekendEmoji}
+                  </span>
+                )}
+                {w}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center items-center min-h-[40vh]">
           <span className="loading loading-dots loading-lg" />
         </div>
+      ) : view === "timeline" ||
+        (typeof window !== "undefined" && window.innerWidth < 640) ? (
+        <Timeline weekends={weekends} activities={activities} />
       ) : (
         <div
           className="grid grid-cols-7 gap-px bg-base-300 rounded-box overflow-hidden"
@@ -198,7 +241,6 @@ export default function Calender() {
             const key = localKey(d);
             const entry = byDate.get(key);
             const instances = entry?.instances || [];
-            // unique weekends for badge display inside the month day
             const cellClass = isSameMonth(d) ? "bg-base-100" : "bg-base-200/60";
             return (
               <div
@@ -283,6 +325,7 @@ export default function Calender() {
           })}
         </div>
       )}
+
       {modalDate && (
         <dialog className="modal modal-open">
           <div className="modal-box">

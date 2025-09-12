@@ -143,17 +143,19 @@ export async function updateActivityInstance(
   if (order !== undefined) payload.order = order;
   if (notes !== undefined) payload.notes = notes;
   if (customMood !== undefined) payload.customMood = customMood;
-  const { data } = await api.put(`activities/${instanceId}`, payload);
+  const { data } = await api.put(`activities/instances/${instanceId}`, payload);
   return data;
 }
 
 export async function deleteActivityInstance(instanceId) {
-  const { data } = await api.delete(`activities/${instanceId}`);
+  const { data } = await api.delete(`activities/instances/${instanceId}`);
   return data;
 }
 
 export async function toggleCompleteActivity(instanceId) {
-  const { data } = await api.post(`activities/${instanceId}/complete`);
+  const { data } = await api.post(
+    `activities/instances/${instanceId}/complete`
+  );
   return data;
 }
 
