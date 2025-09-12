@@ -15,12 +15,26 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 // Create Express app
 const app = express();
-app.use(
-    cors({
-        origin: "*",
-         
-    })
-);
+// Manual CORS to reflect Origin and allow credentials (prevents wildcard '*')
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Vary", "Origin");
+    res.header("Access-Control-Allow-Credentials", "true");
+    const reqHeaders = req.headers["access-control-request-headers"]; // echo requested headers
+    res.header(
+      "Access-Control-Allow-Headers",
+      reqHeaders || "Content-Type, Authorization, X-Requested-With"
+    );
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
+    );
+    if (req.method === "OPTIONS") return res.sendStatus(204);
+  }
+  next();
+});
 app.use(
   express.json({
     verify: (req, _res, buf) => {
