@@ -15,15 +15,12 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 // Create Express app
 const app = express();
-app.set("trust proxy", 1);
-
-const corsOptions = {
-  origin: true,
-  credentials: true,
-  optionsSuccessStatus: 204,
-};
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(
+    cors({
+        origin: "*",
+        credentials: true,
+    })
+);
 app.use(
   express.json({
     verify: (req, _res, buf) => {
@@ -61,14 +58,5 @@ export { supabase };
 
 // API routes
 app.use("/api", router);
-
-// Global error handler (last)
-// Ensures errors surface as JSON instead of crashing the serverless function
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err?.stack || err?.message || String(err));
-  if (res.headersSent) return;
-  res.status(500).json({ error: "Internal Server Error" });
-});
 
 export default app;

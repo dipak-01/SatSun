@@ -1,20 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
 const { SUPABASE_URL, SUPABASE_KEY, VERCEL } = process.env;
-let supabase = null;
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   const msg = "Missing SUPABASE_URL or SUPABASE_KEY.";
   if (VERCEL) {
+    // In Vercel, log a warning instead of exiting to allow project to boot
     console.warn(msg);
   } else {
-    console.warn(msg);
-  }
-} else {
-  try {
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-  } catch (e) {
-    console.error("Failed to init Supabase client:", e?.message || e);
+    throw new Error(msg);
   }
 }
 
-export { supabase };
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
