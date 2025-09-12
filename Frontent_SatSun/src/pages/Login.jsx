@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("dipak@gmail.com");
+  const [password, setPassword] = useState("abcd1234");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -13,9 +13,13 @@ export default function Login() {
     setMessage("");
     setLoading(true);
     try {
-     const res= await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
-        
-         email, password },{withCredentials: true}
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
+        {
+          email,
+          password,
+        },
+        { withCredentials: true }
       );
       const data = await res.data;
       console.log(data);
@@ -23,12 +27,11 @@ export default function Login() {
         setError(data?.error || "Login failed");
       } else {
         setMessage("Logged in");
-       
+
         // Persist minimal user info if needed
         if (data?.user) {
-          console.log("first")
-          localStorage.setItem("user", (data.user));
-          
+          console.log("first");
+          localStorage.setItem("user", data.user);
         }
       }
     } catch {
@@ -36,16 +39,14 @@ export default function Login() {
     } finally {
       setLoading(false);
       window.location.href = "/";
-  
-        
     }
   }
 
   return (
-    <main className="w-screen flex items-center justify-center h-screen">
+    <section className="w-full flex items-center justify-center py-12">
       <form
         onSubmit={handleSubmit}
-        className="card w-96 h-fit bg-base-300 shadow-sm"
+        className="card w-full max-w-md h-fit bg-base-300 shadow-sm"
         noValidate
       >
         <div className="card-body">
@@ -83,6 +84,7 @@ export default function Login() {
               name="email"
               autoComplete="email"
               required
+              defaultValue={"dipak@gmail.com"}
             />
           </label>
           <div className="validator-hint hidden">Enter valid email address</div>
@@ -110,7 +112,7 @@ export default function Login() {
               type="password"
               required
               placeholder="Password"
-              
+              defaultValue={"abcd1234"}
             />
           </label>
           <p className="validator-hint hidden">
@@ -131,6 +133,6 @@ export default function Login() {
           </div>
         </div>
       </form>
-    </main>
+    </section>
   );
 }

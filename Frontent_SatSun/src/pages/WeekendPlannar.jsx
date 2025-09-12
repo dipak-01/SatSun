@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarPlus,
   Edit3,
@@ -22,6 +22,8 @@ import {
   createDayForWeekend,
   updateDayForWeekend,
 } from "../lib/api";
+import { exportNodeToPng } from "../lib/exportImage";
+import ExportWeekendCard from "../components/ExportWeekendCard";
 
 function toISODate(d) {
   if (!d) return "";
@@ -59,6 +61,7 @@ export default function WeekendPlannar() {
   const [editDayLabel, setEditDayLabel] = useState("");
   const [editInstance, setEditInstance] = useState(null); // { inst, notes, customMood }
   const [moveInstance, setMoveInstance] = useState(null); // { inst, fromDayId, targetDayId }
+  const exportRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -82,16 +85,15 @@ export default function WeekendPlannar() {
     return () => (mounted = false);
   }, []);
 
+  const selectedWeekend = useMemo(
+    () => weekends.find((w) => w.id === selectedId) || null,
+    [weekends, selectedId]
+  );
   const activityMap = useMemo(() => {
     const m = new Map();
     for (const a of activities) m.set(a.id, a);
     return m;
   }, [activities]);
-
-  const selectedWeekend = useMemo(
-    () => weekends.find((w) => w.id === selectedId) || null,
-    [weekends, selectedId]
-  );
 
   function resetCreate() {
     setCreateForm({
@@ -554,6 +556,22 @@ export default function WeekendPlannar() {
                         aria-label="Edit weekend"
                       >
                         <Edit3 size={16} /> Edit
+                      </button>
+                      <button
+                        className="btn btn-primary"
+                        aria-label="Export PNG"
+                        onClick={async () => {
+                          const node = exportRef.current;
+                          if (!node) return;
+                          await exportNodeToPng(node, {
+                            filename: `${
+                              selectedWeekend.title || "weekend"
+                            }.png`,
+                            pixelRatio: 2,
+                          });
+                        }}
+                      >
+                        Export PNG
                       </button>
                     </div>
                   </div>
@@ -1199,6 +1217,20 @@ export default function WeekendPlannar() {
             <button>close</button>
           </form>
         </dialog>
+      )}
+
+      {/* Hidden export template */}
+      {selectedWeekend && (
+        <div
+          className="fixed -left-[10000px] -top-[10000px] pointer-events-none"
+          aria-hidden
+        >
+          <ExportWeekendCard
+            ref={exportRef}
+            weekend={selectedWeekend}
+            activityMap={activityMap}
+          />
+        </div>
       )}
     </section>
   );

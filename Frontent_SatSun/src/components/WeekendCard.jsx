@@ -1,7 +1,11 @@
+import { useRef } from "react";
 import { Calendar, Clock, Share2 } from "lucide-react";
+import { exportNodeToPng } from "../lib/exportImage";
+import ExportWeekendCard from "./ExportWeekendCard";
 
-export default function WeekendCard({ data }) {
+export default function WeekendCard({ data, activityMap }) {
   const { start_date, end_date } = data || {};
+  const exportRef = useRef(null);
 
   const formatPart = (d) => {
     if (!d) return "";
@@ -53,12 +57,35 @@ export default function WeekendCard({ data }) {
             {data?.shared && (
               <div className="badge badge-soft badge-info">Shared</div>
             )}
-            <button className="btn btn-ghost btn-sm" aria-label="Share weekend">
+            <button
+              className="btn btn-ghost btn-sm"
+              aria-label="Share / Export weekend PNG"
+              onClick={async () => {
+                const node = exportRef.current;
+                if (!node) return;
+                await exportNodeToPng(node, {
+                  filename: `${data.title || "weekend"}.png`,
+                  pixelRatio: 2,
+                });
+              }}
+            >
               <Share2 size={18} />
             </button>
             <button className="btn btn-primary btn-sm">Open</button>
           </div>
         </div>
+      </div>
+
+      {/* Hidden export content for PNG capture */}
+      <div
+        className="fixed -left-[10000px] -top-[10000px] pointer-events-none"
+        aria-hidden
+      >
+        <ExportWeekendCard
+          ref={exportRef}
+          weekend={data}
+          activityMap={activityMap}
+        />
       </div>
     </div>
   );

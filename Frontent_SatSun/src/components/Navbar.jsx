@@ -30,9 +30,7 @@ function Navbar() {
           aria-label="Primary"
         >
           <nav className="menu menu-horizontal gap-1">
-            <Link to="/weekend" className="btn btn-ghost" aria-label="Weekend">
-              Weekend
-            </Link>
+             
             <Link
               to="/weekend-planner"
               className="btn btn-ghost"

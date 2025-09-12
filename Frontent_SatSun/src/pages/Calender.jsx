@@ -55,6 +55,13 @@ export default function Calender() {
   const [modalDate, setModalDate] = useState(null);
   const navigate = useNavigate();
 
+  // Weekend helpers
+  const weekendEmoji = "🎉";
+  const isWeekend = (d) => {
+    const day = d.getDay();
+    return day === 0 || day === 6; // Sun or Sat
+  };
+
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -160,16 +167,23 @@ export default function Calender() {
           </button>
         </div>
       </div>
-
       {/* Weekday header */}
       <div className="grid grid-cols-7 text-sm opacity-70 mb-2">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((w) => (
-          <div key={w} className="px-2 py-1">
-            {w}
-          </div>
-        ))}
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((w) => {
+          const isWknd = w === "Sun" || w === "Sat";
+          return (
+            <div key={w} className="px-2 py-1">
+              {isWknd && (
+                <span role="img" aria-label="weekend" className="mr-1">
+                  {weekendEmoji}
+                </span>
+              )}
+              {w}
+            </div>
+          );
+        })}
       </div>
-
+      ;
       {loading ? (
         <div className="flex justify-center items-center min-h-[40vh]">
           <span className="loading loading-dots loading-lg" />
@@ -207,6 +221,11 @@ export default function Calender() {
                       isSameMonth(d) ? "opacity-80" : "opacity-50"
                     }`}
                   >
+                    {isWeekend(d) && (
+                      <span role="img" aria-label="weekend" className="mr-1">
+                        {weekendEmoji}
+                      </span>
+                    )}
                     {d.getDate()}
                   </div>
                 </div>
@@ -264,7 +283,6 @@ export default function Calender() {
           })}
         </div>
       )}
-
       {modalDate && (
         <dialog className="modal modal-open">
           <div className="modal-box">
