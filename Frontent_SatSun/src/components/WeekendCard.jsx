@@ -4,10 +4,10 @@ import { exportNodeToPng } from "../lib/exportImage";
 import ExportWeekendCard from "./ExportWeekendCard";
 
 export default function WeekendCard({ data, activityMap }) {
-  const { start_date, end_date } = data || {};
+  const { start_date, end_date, title, mood, shared } = data || {};
   const exportRef = useRef(null);
 
-  const formatPart = (d) => {
+  function formatPart(d) {
     if (!d) return "";
     const dt = new Date(d);
     if (isNaN(dt)) return "";
@@ -16,7 +16,7 @@ export default function WeekendCard({ data, activityMap }) {
       month: "short",
       day: "numeric",
     });
-  };
+  }
 
   const startLabel = formatPart(start_date);
   const endLabel = formatPart(end_date);
@@ -36,43 +36,50 @@ export default function WeekendCard({ data, activityMap }) {
   }
 
   return (
-    <div className="card bg-base-100 min-w-80 w-96 shadow-sm hover:shadow transition-shadow">
-      <div className="card-body">
-        <h2 className="card-title">{data.title}</h2>
-
-        <div className="flex flex-row justify-between items-center font-medium text-sm">
-          <span className="flex items-center gap-2">
-            <Calendar size={16} /> {rangeLabel}
-          </span>
-          <span className="flex items-center gap-2 opacity-80">
-            <Clock size={16} /> {duration}
-          </span>
+    <div className="card bg-base-100 w-full sm:min-w-72 sm:w-96 border border-base-300 hover:border-primary/40 transition-colors shadow-sm h-60">
+      <div className="card-body gap-3 h-full flex flex-col">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="card-title text-base break-words leading-snug line-clamp-2">
+              {title}
+            </h3>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+              <span className="badge badge-outline gap-1">
+                <Calendar size={12} /> {rangeLabel}
+              </span>
+              {duration && (
+                <span className="badge badge-ghost gap-1">
+                  <Clock size={12} /> {duration}
+                </span>
+              )}
+              {mood && (
+                <span className="badge badge-soft badge-secondary">{mood}</span>
+              )}
+            </div>
+          </div>
+          {shared && (
+            <span className="badge badge-soft badge-info self-start">
+              Shared
+            </span>
+          )}
         </div>
 
-        <div className="card-actions flex justify-between items-center pt-3">
-          {data?.mood && (
-            <div className="badge badge-soft badge-secondary">{data.mood}</div>
-          )}
-          <div className="flex items-center gap-2">
-            {data?.shared && (
-              <div className="badge badge-soft badge-info">Shared</div>
-            )}
-            <button
-              className="btn btn-ghost btn-sm"
-              aria-label="Share / Export weekend PNG"
-              onClick={async () => {
-                const node = exportRef.current;
-                if (!node) return;
-                await exportNodeToPng(node, {
-                  filename: `${data.title || "weekend"}.png`,
-                  pixelRatio: 2,
-                });
-              }}
-            >
-              <Share2 size={18} />
-            </button>
-            <button className="btn btn-primary btn-sm">Open</button>
-          </div>
+        <div className="card-actions justify-end items-center pt-1 mt-auto">
+          <button
+            className="btn btn-ghost btn-sm"
+            aria-label="Share / Export weekend PNG"
+            onClick={async () => {
+              const node = exportRef.current;
+              if (!node) return;
+              await exportNodeToPng(node, {
+                filename: `${title || "weekend"}.png`,
+                pixelRatio: 2,
+              });
+            }}
+          >
+            <Share2 size={18} />
+          </button>
+          <button className="btn btn-primary btn-sm">Open</button>
         </div>
       </div>
 

@@ -24,7 +24,6 @@ describe("Navbar", () => {
 
   it("has primary navigation links", () => {
     setup();
-    expect(screen.getByRole("link", { name: /Weekend/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Planner/i })).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Activities/i })

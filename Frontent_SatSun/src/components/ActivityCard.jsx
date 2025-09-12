@@ -1,4 +1,4 @@
-import { Calendar, Clock, Share2 } from "lucide-react";
+import { Clock } from "lucide-react";
 
 export default function ActivityCard({ data }) {
   // const { start_date, end_date } = data || {};
@@ -32,38 +32,48 @@ export default function ActivityCard({ data }) {
   // }
 
   return (
-    <div className="card bg-base-100 min-w-80 w-96 shadow-sm hover:shadow transition-shadow">
-      <div className="card-body">
-        <div>
-          <h2 className="card-title text-left">
-            {data?.icon} {data?.title}
-          </h2>
-          {data?.description && (
-            <p className="text-left mt-2 line-clamp-2 opacity-90">
-              {data.description}
-            </p>
+    <div className="card bg-base-100 w-full sm:min-w-72 sm:w-96 border border-base-300 hover:border-primary/40 transition-colors shadow-sm h-60">
+      <div className="card-body gap-3 h-full flex flex-col">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 min-w-0">
+            <span className="text-xl leading-none select-none">
+              {data?.icon || "🎯"}
+            </span>
+            <div className="min-w-0">
+              <h3 className="card-title text-base break-words leading-snug">
+                {data?.title}
+              </h3>
+              {data?.description && (
+                <p className="text-sm opacity-70 mt-1 line-clamp-2 text-left">
+                  {data.description}
+                </p>
+              )}
+            </div>
+          </div>
+          {data?.category && (
+            <span className="badge badge-ghost whitespace-nowrap self-start">
+              {data.category}
+            </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 font-medium pt-3 text-sm">
-          <span className="flex items-center gap-2">
-            <Clock size={16} />
-            {data?.duration_min} min
+
+        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+          <span className="badge badge-outline gap-1">
+            <Clock size={12} /> {data?.duration_min}m
           </span>
-          {data?.category && (
-            <span className="badge badge-ghost">{data.category}</span>
-          )}
           {data?.default_mood && (
             <span className="badge badge-soft badge-info">
               {data.default_mood}
             </span>
           )}
         </div>
+
         {(data?.tags?.length ?? 0) > 0 && (
-          <div className="card-actions justify-start flex flex-wrap gap-2 pt-3">
+          <div className="flex flex-wrap gap-2 pt-1 max-h-10 overflow-hidden">
             {data.tags.map((tag, index) => (
-              <div key={index} className="badge badge-soft badge-secondary">
+              <span key={index} className="badge badge-soft badge-secondary">
                 {tag}
-              </div>
+              </span>
             ))}
           </div>
         )}

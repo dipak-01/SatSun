@@ -26,6 +26,12 @@ import { exportNodeToPng } from "../lib/exportImage";
 import ExportWeekendCard from "../components/ExportWeekendCard";
 import TemplateGallery from "../components/Templates/TemplateGallery";
 import ApplyTemplateModal from "../components/Templates/ApplyTemplateModal";
+import CreateWeekendModal from "../components/Planner/CreateWeekendModal";
+import EditWeekendModal from "../components/Planner/EditWeekendModal";
+import AddActivityModal from "../components/Planner/AddActivityModal";
+import AddDayModal from "../components/Planner/AddDayModal";
+import EditDayLabelModal from "../components/Planner/EditDayLabelModal";
+import MoveInstanceModal from "../components/Planner/MoveInstanceModal";
 import { WEEKEND_TEMPLATES, matchActivityId } from "../lib/templates";
 
 function toISODate(d) {
@@ -720,446 +726,64 @@ export default function WeekendPlannar() {
         </div>
       )}
 
-      {showCreate && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-md relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => {
-                setShowCreate(false);
-                resetCreate();
-              }}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">New Weekend</h3>
-            <p className="text-sm opacity-70 text-center mt-1">
-              Set a title and date range for your weekend.
-            </p>
-            <form className="mt-4 space-y-4" onSubmit={handleCreateWeekend}>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Title</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={createForm.title}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, title: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Start date</span>
-                </div>
-                <input
-                  type="date"
-                  className="input input-bordered w-full"
-                  value={createForm.startDate}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, startDate: e.target.value }))
-                  }
-                  required
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">End date</span>
-                </div>
-                <input
-                  type="date"
-                  className="input input-bordered w-full"
-                  value={createForm.endDate}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, endDate: e.target.value }))
-                  }
-                  required
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Mood (optional)</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={createForm.mood}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, mood: e.target.value }))
-                  }
-                />
-              </label>
-              <div className="modal-action mt-2">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => {
-                    setShowCreate(false);
-                    resetCreate();
-                  }}
-                >
-                  Cancel
-                </button>
-                <button className="btn btn-primary" type="submit">
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => {
-              setShowCreate(false);
-              resetCreate();
-            }}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      <CreateWeekendModal
+        open={showCreate}
+        onClose={() => {
+          setShowCreate(false);
+          resetCreate();
+        }}
+        form={createForm}
+        setForm={setCreateForm}
+        onSubmit={handleCreateWeekend}
+      />
 
-      {showEdit && selectedWeekend && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-lg relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setShowEdit(false)}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">Edit Weekend</h3>
-            <p className="text-sm opacity-70 text-center mt-1">
-              Update details for “{selectedWeekend.title}”.
-            </p>
-            <form className="mt-4 space-y-4" onSubmit={handleSaveEdit}>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Title</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editForm.title}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, title: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Start date</span>
-                </div>
-                <input
-                  type="date"
-                  className="input input-bordered w-full"
-                  value={editForm.startDate}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, startDate: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">End date</span>
-                </div>
-                <input
-                  type="date"
-                  className="input input-bordered w-full"
-                  value={editForm.endDate}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, endDate: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Mood (optional)</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editForm.mood}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, mood: e.target.value }))
-                  }
-                />
-              </label>
-              <div className="modal-action mt-2">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setShowEdit(false)}
-                >
-                  Cancel
-                </button>
-                <button className="btn btn-primary" type="submit">
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setShowEdit(false)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      <EditWeekendModal
+        open={showEdit && !!selectedWeekend}
+        onClose={() => setShowEdit(false)}
+        form={editForm}
+        setForm={setEditForm}
+        onSubmit={handleSaveEdit}
+        weekendTitle={selectedWeekend?.title}
+      />
 
-      {showAddActivityForDay && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-md relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setShowAddActivityForDay(null)}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">Add Activity</h3>
-            <p className="text-sm opacity-70 text-center mt-1">
-              {new Date(showAddActivityForDay.date).toLocaleDateString(
-                undefined,
-                { weekday: "long", month: "short", day: "numeric" }
-              )}
-            </p>
-            <div className="mt-4 space-y-4">
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Activity</span>
-                </div>
-                <select
-                  className="select select-bordered w-full"
-                  value={selectedActivityId}
-                  onChange={(e) => setSelectedActivityId(e.target.value)}
-                >
-                  <option value="">Select an activity</option>
-                  {(activities || []).map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.icon} {a.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Order (optional)</span>
-                </div>
-                <input
-                  type="number"
-                  min={0}
-                  className="input input-bordered w-full"
-                  value={orderHint}
-                  onChange={(e) => setOrderHint(e.target.value)}
-                />
-                <div className="label">
-                  <span className="label-text-alt opacity-70">
-                    Leave blank to add at the end.
-                  </span>
-                </div>
-              </label>
-            </div>
-            <div className="modal-action mt-2">
-              <button
-                className="btn btn-ghost"
-                onClick={() => setShowAddActivityForDay(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => addActivity(showAddActivityForDay)}
-              >
-                Add
-              </button>
-            </div>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setShowAddActivityForDay(null)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      <AddActivityModal
+        open={!!showAddActivityForDay}
+        onClose={() => setShowAddActivityForDay(null)}
+        day={showAddActivityForDay}
+        activities={activities}
+        selectedActivityId={selectedActivityId}
+        setSelectedActivityId={setSelectedActivityId}
+        orderHint={orderHint}
+        setOrderHint={setOrderHint}
+        onAdd={() => addActivity(showAddActivityForDay)}
+      />
 
-      {showAddDay && selectedWeekend && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-md relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setShowAddDay(false)}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">Add Day</h3>
-            <form className="mt-4 space-y-4" onSubmit={handleAddDay}>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Date</span>
-                </div>
-                <input
-                  type="date"
-                  className="input input-bordered w-full"
-                  value={newDayForm.date}
-                  onChange={(e) =>
-                    setNewDayForm((f) => ({ ...f, date: e.target.value }))
-                  }
-                  required
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Label (optional)</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={newDayForm.dayLabel}
-                  onChange={(e) =>
-                    setNewDayForm((f) => ({ ...f, dayLabel: e.target.value }))
-                  }
-                />
-              </label>
-              <div className="modal-action mt-2">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setShowAddDay(false)}
-                >
-                  Cancel
-                </button>
-                <button className="btn btn-primary" type="submit">
-                  Add Day
-                </button>
-              </div>
-            </form>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setShowAddDay(false)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      <AddDayModal
+        open={showAddDay && !!selectedWeekend}
+        onClose={() => setShowAddDay(false)}
+        form={newDayForm}
+        setForm={setNewDayForm}
+        onSubmit={handleAddDay}
+      />
 
-      {showEditDay && selectedWeekend && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-md relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setShowEditDay(null)}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">Rename Day</h3>
-            <form className="mt-4 space-y-4" onSubmit={handleSaveDayLabel}>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Label</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editDayLabel}
-                  onChange={(e) => setEditDayLabel(e.target.value)}
-                />
-              </label>
-              <div className="modal-action mt-2">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setShowEditDay(null)}
-                >
-                  Cancel
-                </button>
-                <button className="btn btn-primary" type="submit">
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setShowEditDay(null)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      <EditDayLabelModal
+        open={!!showEditDay && !!selectedWeekend}
+        onClose={() => setShowEditDay(null)}
+        value={editDayLabel}
+        setValue={setEditDayLabel}
+        onSubmit={handleSaveDayLabel}
+      />
 
       {/* Notes & custom mood modal removed */}
 
-      {moveInstance && selectedWeekend && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-md relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setMoveInstance(null)}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">Move Activity</h3>
-            <div className="mt-4 space-y-4">
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Target day</span>
-                </div>
-                <select
-                  className="select select-bordered w-full"
-                  value={moveInstance.targetDayId}
-                  onChange={(e) =>
-                    setMoveInstance((v) => ({
-                      ...v,
-                      targetDayId: e.target.value,
-                    }))
-                  }
-                >
-                  {(selectedWeekend.days || []).map((d) => (
-                    <option
-                      key={d.id}
-                      value={d.id}
-                      disabled={d.id === moveInstance.fromDayId}
-                    >
-                      {new Date(d.date).toLocaleDateString(undefined, {
-                        weekday: "long",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="modal-action mt-2">
-              <button
-                className="btn btn-ghost"
-                onClick={() => setMoveInstance(null)}
-              >
-                Cancel
-              </button>
-              <button className="btn btn-primary" onClick={handleMoveInstance}>
-                Move
-              </button>
-            </div>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setMoveInstance(null)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      <MoveInstanceModal
+        open={!!moveInstance && !!selectedWeekend}
+        onClose={() => setMoveInstance(null)}
+        days={selectedWeekend?.days}
+        moveState={moveInstance}
+        setMoveState={setMoveInstance}
+        onMove={handleMoveInstance}
+      />
 
       {/* Hidden export template */}
       {selectedWeekend && (

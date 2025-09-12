@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Edit3, Trash2, X, Search } from "lucide-react";
+import { Plus, Edit3, Trash2, Search } from "lucide-react";
 import {
   getActivities,
   createActivity,
   updateActivity,
   deleteActivity,
 } from "../lib/api";
+import { ACTIVITY_TEMPLATES } from "../lib/activityTemplates";
+import ActivityTemplateGallery from "../components/ActivityTemplates/ActivityTemplateGallery";
+import CreateActivityModal from "../components/Activities/CreateActivityModal";
+import EditActivityModal from "../components/Activities/EditActivityModal";
 
 const categories = [
   "Outdoors",
@@ -217,16 +221,23 @@ export default function Activity() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((a) => (
-            <div key={a.id} className="card bg-base-100">
-              <div className="card-body">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl leading-none">{a.icon}</span>
-                    <div>
-                      <div className="font-medium text-start">{a.title}</div>
-                      <div className="text-xs text-start opacity-70">
-                        {a.category}
-                      </div>
+            <div
+              key={a.id}
+              className="card bg-base-100 w-full border border-base-300 hover:border-primary/40 transition-colors shadow-sm h-60"
+            >
+              <div className="card-body h-full flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2 min-w-0">
+                    <span className="text-xl leading-none select-none">
+                      {a.icon || "🎯"}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="card-title text-base break-words leading-snug">
+                        {a.title}
+                      </h3>
+                      {a.category && (
+                        <div className="text-xs opacity-70">{a.category}</div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -237,48 +248,27 @@ export default function Activity() {
                     ) : (
                       <span className="badge badge-ghost">Free</span>
                     )}
-                    <button
-                      className="btn btn-xs"
-                      aria-label={`Edit ${a.title}`}
-                      onClick={() => openEdit(a)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          openEdit(a);
-                        }
-                      }}
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                    <button
-                      className="btn btn-xs btn-error"
-                      aria-label={`Delete ${a.title}`}
-                      onClick={() => handleDelete(a)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          handleDelete(a);
-                        }
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
                   </div>
                 </div>
+
                 {a.description && (
-                  <div className="text-sm mt-2 text-start">{a.description}</div>
+                  <p className="text-sm opacity-70 line-clamp-2 text-left">
+                    {a.description}
+                  </p>
                 )}
-                <div className="text-xs opacity-70 mt-2 flex  flex-wrap gap-2">
-                  <div className="flex flex-row  justify-between">
-                    <span className="badge badge-ghost">{a.duration_min}m</span>
-                    {a.default_mood && (
-                      <span className="badge badge-soft badge-primary">
-                        Mood: {a.default_mood}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    {(a.tags || []).map((t, i) => (
+
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="badge badge-outline">{a.duration_min}m</span>
+                  {a.default_mood && (
+                    <span className="badge badge-soft badge-primary">
+                      {a.default_mood}
+                    </span>
+                  )}
+                </div>
+
+                {(a.tags || []).length > 0 && (
+                  <div className="flex flex-wrap gap-2 max-h-10 overflow-hidden">
+                    {a.tags.map((t, i) => (
                       <span
                         key={i}
                         className="badge badge-soft badge-secondary"
@@ -287,6 +277,35 @@ export default function Activity() {
                       </span>
                     ))}
                   </div>
+                )}
+
+                <div className="mt-auto flex justify-end gap-2">
+                  <button
+                    className="btn btn-xs"
+                    aria-label={`Edit ${a.title}`}
+                    onClick={() => openEdit(a)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openEdit(a);
+                      }
+                    }}
+                  >
+                    <Edit3 size={14} />
+                  </button>
+                  <button
+                    className="btn btn-xs btn-error"
+                    aria-label={`Delete ${a.title}`}
+                    onClick={() => handleDelete(a)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleDelete(a);
+                      }
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -294,313 +313,47 @@ export default function Activity() {
         </div>
       )}
 
-      {showCreate && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-lg relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setShowCreate(false)}
-            >
-              <X size={16} />
-            </button>
-            <h3 className="font-bold text-lg text-center">New Activity</h3>
-            <form className="mt-4 space-y-4" onSubmit={handleCreate}>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Title</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={createForm.title}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, title: e.target.value }))
-                  }
-                  required
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Description</span>
-                </div>
-                <textarea
-                  className="textarea textarea-bordered w-full"
-                  value={createForm.description}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({
-                      ...f,
-                      description: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Category</span>
-                </div>
-                <select
-                  className="select select-bordered w-full"
-                  value={createForm.category}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, category: e.target.value }))
-                  }
-                  required
-                >
-                  <option value="">Select</option>
-                  {categories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Duration (min)</span>
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  className="input input-bordered w-full"
-                  value={createForm.durationMin}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({
-                      ...f,
-                      durationMin: Number(e.target.value),
-                    }))
-                  }
-                  required
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Icon</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={createForm.icon}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, icon: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Default Mood</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={createForm.defaultMood}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({
-                      ...f,
-                      defaultMood: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Tags (comma separated)</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={createForm.tags}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({ ...f, tags: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Premium</span>
-                </div>
-                <input
-                  type="checkbox"
-                  className="toggle toggle-accent"
-                  checked={!!createForm.isPremium}
-                  onChange={(e) =>
-                    setCreateForm((f) => ({
-                      ...f,
-                      isPremium: e.target.checked,
-                    }))
-                  }
-                />
-              </label>
-              <div className="modal-action">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setShowCreate(false)}
-                >
-                  Cancel
-                </button>
-                <button className="btn btn-primary" type="submit">
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setShowCreate(false)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      <CreateActivityModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        form={createForm}
+        setForm={setCreateForm}
+        onSubmit={handleCreate}
+        categories={categories}
+      />
 
-      {editItem && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-lg relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setEditItem(null)}
-            >
-              <X size={16} />
-            </button>
-            <h3 className="font-bold text-lg text-center">Edit Activity</h3>
-            <form className="mt-4 space-y-4" onSubmit={handleEdit}>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full ">
-                  <span className="label-text">Title</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editForm.title}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, title: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Description</span>
-                </div>
-                <textarea
-                  className="textarea textarea-bordered w-full"
-                  value={editForm.description}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, description: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Category</span>
-                </div>
-                <select
-                  className="select select-bordered w-full"
-                  value={editForm.category}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, category: e.target.value }))
-                  }
-                >
-                  <option value="">Select</option>
-                  {categories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Duration (min)</span>
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  className="input input-bordered w-full"
-                  value={editForm.durationMin}
-                  onChange={(e) =>
-                    setEditForm((f) => ({
-                      ...f,
-                      durationMin: Number(e.target.value),
-                    }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Icon</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editForm.icon}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, icon: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Default Mood</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editForm.defaultMood}
-                  onChange={(e) =>
-                    setEditForm((f) => ({
-                      ...f,
-                      defaultMood: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Tags (comma separated)</span>
-                </div>
-                <input
-                  className="input input-bordered w-full"
-                  value={editForm.tags}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, tags: e.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-control w-full text-start">
-                <div className="label justify-start text-left w-full">
-                  <span className="label-text">Premium</span>
-                </div>
-                <input
-                  type="checkbox"
-                  className="toggle toggle-accent"
-                  checked={!!editForm.isPremium}
-                  onChange={(e) =>
-                    setEditForm((f) => ({
-                      ...f,
-                      isPremium: e.target.checked,
-                    }))
-                  }
-                />
-              </label>
-              <div className="modal-action">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setEditItem(null)}
-                >
-                  Cancel
-                </button>
-                <button className="btn btn-primary" type="submit">
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setEditItem(null)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      {/* Inline templates section */}
+      <div className="mt-10">
+        <h2 className="text-xl font-semibold mb-2">Activity templates</h2>
+        <p className="text-sm opacity-70 mb-4">
+          Pick a template to prefill the form. You can tweak before creating.
+        </p>
+        <ActivityTemplateGallery
+          templates={ACTIVITY_TEMPLATES}
+          onSelect={(t) => {
+            setCreateForm({
+              title: t.title,
+              description: t.description,
+              category: t.category,
+              durationMin: t.durationMin,
+              icon: t.icon,
+              tags: (t.tags || []).join(", "),
+              isPremium: !!t.isPremium,
+              defaultMood: t.defaultMood || "",
+            });
+            setShowCreate(true);
+          }}
+        />
+      </div>
+
+      <EditActivityModal
+        open={!!editItem}
+        onClose={() => setEditItem(null)}
+        form={editForm}
+        setForm={setEditForm}
+        onSubmit={handleEdit}
+        categories={categories}
+      />
     </section>
   );
 }
