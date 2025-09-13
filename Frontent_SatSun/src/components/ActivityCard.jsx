@@ -1,6 +1,7 @@
 import { Clock } from "lucide-react";
+import { memo } from "react";
 
-export default function ActivityCard({ data }) {
+function ActivityCardImpl({ data }) {
   // const { start_date, end_date } = data || {};
 
   // const formatPart = (d) => {
@@ -81,3 +82,5 @@ export default function ActivityCard({ data }) {
     </div>
   );
 }
+
+export default memo(ActivityCardImpl);

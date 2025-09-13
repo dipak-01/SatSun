@@ -98,6 +98,27 @@ export async function getActivities({ limit = 200, offset = 0 } = {}) {
   return data; // { items, total, limit, offset }
 }
 
+// Cached activities list similar to weekends
+export function getActivitiesCached(params = {}) {
+  const q = { limit: 200, offset: 0, ...params };
+  return {
+    initial: (async () => {
+      const mod = await import("./storage.js");
+      return (await mod.getCachedActivities(q)) ?? null;
+    })(),
+    refresh: (async () => {
+      const { data } = await api.get(`activities`, { params: q });
+      try {
+        const mod = await import("./storage.js");
+        await mod.setCachedActivities(q, data);
+      } catch {
+        // best-effort caching
+      }
+      return data;
+    })(),
+  };
+}
+
 export async function createActivity({
   title,
   description,
@@ -137,6 +158,28 @@ export async function getWeekends({ includeDays = true } = {}) {
     params: { includeDays },
   });
   return data; // array of weekend plans (optionally with days)
+}
+
+// Cached fetch: return cached weekends immediately (if present), then refresh in background.
+// Returns { initial, refresh }: initial is cached or null, refresh is a Promise for network data.
+export function getWeekendsCached({ includeDays = true } = {}) {
+  // Lazy import to avoid cycle
+  return {
+    initial: (async () => {
+      const mod = await import("./storage.js");
+      return (await mod.getCachedWeekends()) ?? null;
+    })(),
+    refresh: (async () => {
+      const { data } = await api.get(`weekends`, { params: { includeDays } });
+      try {
+        const mod = await import("./storage.js");
+        await mod.setCachedWeekends(data);
+      } catch {
+        // caching is best-effort
+      }
+      return data;
+    })(),
+  };
 }
 
 export async function createWeekend({

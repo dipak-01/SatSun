@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CalendarPlus,
@@ -11,12 +11,12 @@ import {
   MoreVertical,
 } from "lucide-react";
 import {
-  getWeekends,
+  getWeekendsCached,
+  getActivitiesCached,
   createWeekend,
   updateWeekend,
   deleteWeekend,
   addActivityToDay,
-  getActivities,
   deleteActivityInstance,
   toggleCompleteActivity,
   updateActivityInstance,
@@ -34,6 +34,8 @@ import AddDayModal from "../components/Planner/AddDayModal";
 import EditDayLabelModal from "../components/Planner/EditDayLabelModal";
 import MoveInstanceModal from "../components/Planner/MoveInstanceModal";
 import { WEEKEND_TEMPLATES, matchActivityId } from "../lib/templates";
+import Spinner from "../components/ui/Spinner";
+import Card from "../components/ui/Card";
 
 function toISODate(d) {
   if (!d) return "";
@@ -83,15 +85,27 @@ export default function WeekendPlannar() {
     async function load() {
       setLoading(true);
       try {
-        const [w, a] = await Promise.all([
-          getWeekends({ includeDays: true }),
-          getActivities({ limit: 500 }),
+        // Serve cached weekends immediately, then refresh network.
+        const weekendsCached = getWeekendsCached({ includeDays: true });
+        const cached = await weekendsCached.initial;
+        if (mounted && cached) setWeekends(cached || []);
+
+        // Serve cached activities immediately too
+        const activitiesCached = getActivitiesCached({ limit: 500 });
+        const cachedActs = await activitiesCached.initial;
+        if (mounted && cachedActs?.items) setActivities(cachedActs.items || []);
+
+        const [freshWeekends, freshActivities] = await Promise.all([
+          weekendsCached.refresh,
+          activitiesCached.refresh,
         ]);
         if (!mounted) return;
-        setWeekends(w || []);
-        setActivities(a?.items || []);
+        setWeekends(freshWeekends || []);
+        setActivities(freshActivities?.items || []);
         // only set default selection on first load
-        setSelectedId((prev) => (prev ? prev : w?.[0]?.id || null));
+        setSelectedId((prev) =>
+          prev ? prev : (freshWeekends || [])?.[0]?.id || null
+        );
       } finally {
         if (mounted) setLoading(false);
       }
@@ -117,6 +131,68 @@ export default function WeekendPlannar() {
     for (const a of activities) m.set(a.id, a);
     return m;
   }, [activities]);
+
+  // Lightweight memoized row for performance when there are 50+ items
+  const ActivityRow = useMemo(
+    () =>
+      memo(function ActivityRow({
+        inst,
+        act,
+        onToggle,
+        onReorderUp,
+        onReorderDown,
+        onMove,
+        onDelete,
+      }) {
+        return (
+          <div className="p-2 rounded-box bg-base-200 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="truncate">
+                {act?.icon} {act?.title || "Activity"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                className="toggle toggle-sm"
+                checked={!!inst.is_completed}
+                onChange={onToggle}
+                aria-label="Completed"
+              />
+              <div className="dropdown dropdown-end">
+                <button
+                  className="btn btn-xs"
+                  aria-label="More actions"
+                  tabIndex={0}
+                >
+                  <MoreVertical size={12} />
+                </button>
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content menu menu-sm bg-base-100 rounded-box z-[1] mt-2 w-48 p-2 shadow"
+                >
+                  <li>
+                    <button onClick={onReorderUp}>Move up</button>
+                  </li>
+                  <li>
+                    <button onClick={onReorderDown}>Move down</button>
+                  </li>
+                  <li>
+                    <button onClick={onMove}>Move activity</button>
+                  </li>
+                  <li>
+                    <button className="text-error" onClick={onDelete}>
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        );
+      }),
+    []
+  );
 
   function resetCreate() {
     setCreateForm({
@@ -446,302 +522,215 @@ export default function WeekendPlannar() {
 
       {loading ? (
         <div className="flex justify-center items-center min-h-[40vh]">
-          <span className="loading loading-dots loading-lg" />
+          <Spinner />
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Weekend list */}
           <div className="lg:col-span-4">
-            <div className="card bg-base-200">
-              <div className="card-body">
-                <h2 className="card-title">Your Weekends</h2>
-                <div
-                  className="space-y-2 max-h-[65vh] overflow-auto pr-1"
-                  role="list"
-                  aria-label="Your weekends"
-                >
-                  {(weekends || []).map((w) => (
-                    <div
-                      key={w.id}
-                      className={`p-3 rounded-box border cursor-pointer flex items-start justify-between gap-3 ${
-                        selectedId === w.id
-                          ? "border-primary"
-                          : "border-base-300"
-                      }`}
-                      role="button"
-                      aria-pressed={selectedId === w.id}
-                      tabIndex={0}
-                      onClick={() => setSelectedId(w.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setSelectedId(w.id);
-                        }
-                      }}
-                    >
-                      <div>
-                        <div className="font-medium">{w.title}</div>
-                        <div className="text-xs opacity-70">
-                          {new Date(w.start_date).toLocaleDateString()} –{" "}
-                          {new Date(w.end_date).toLocaleDateString()}
-                        </div>
-                        {w.mood && (
-                          <div className="text-xs">Mood: {w.mood}</div>
-                        )}
+            <Card className="bg-base-200">
+              <h2 className="card-title">Your Weekends</h2>
+              <div
+                className="space-y-2 max-h-[65vh] overflow-auto pr-1"
+                role="list"
+                aria-label="Your weekends"
+              >
+                {(weekends || []).map((w) => (
+                  <div
+                    key={w.id}
+                    className={`p-3 rounded-box border cursor-pointer flex items-start justify-between gap-3 ${
+                      selectedId === w.id ? "border-primary" : "border-base-300"
+                    }`}
+                    role="button"
+                    aria-pressed={selectedId === w.id}
+                    tabIndex={0}
+                    onClick={() => setSelectedId(w.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedId(w.id);
+                      }
+                    }}
+                  >
+                    <div>
+                      <div className="font-medium">{w.title}</div>
+                      <div className="text-xs opacity-70">
+                        {new Date(w.start_date).toLocaleDateString()} –{" "}
+                        {new Date(w.end_date).toLocaleDateString()}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="btn btn-xs"
-                          aria-label={`Edit ${w.title}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEdit(w);
-                          }}
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                        <button
-                          className="btn btn-xs btn-error"
-                          aria-label={`Delete ${w.title}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteWeekend(w.id);
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                      {w.mood && <div className="text-xs">Mood: {w.mood}</div>}
                     </div>
-                  ))}
-                  {(!weekends || weekends.length === 0) && (
-                    <div className="text-sm opacity-70 p-3 rounded-box bg-base-100">
-                      No weekends yet. Create one to start planning.
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn btn-xs"
+                        aria-label={`Edit ${w.title}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(w);
+                        }}
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      <button
+                        className="btn btn-xs btn-error"
+                        aria-label={`Delete ${w.title}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteWeekend(w.id);
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ))}
+                {(!weekends || weekends.length === 0) && (
+                  <div className="text-sm opacity-70 p-3 rounded-box bg-base-100">
+                    No weekends yet. Create one to start planning.
+                  </div>
+                )}
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Weekend detail */}
           <div className="lg:col-span-8">
             {selectedWeekend ? (
-              <div className="card bg-base-100">
-                <div className="card-body">
-                  <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
-                    <div className="min-w-0">
-                      <h2 className="card-title break-words">
-                        {selectedWeekend.title}
-                      </h2>
-                      <div className="text-sm opacity-70 break-words">
-                        {new Date(
-                          selectedWeekend.start_date
-                        ).toLocaleDateString()}{" "}
-                        –{" "}
-                        {new Date(
-                          selectedWeekend.end_date
-                        ).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        className="btn btn-ghost"
-                        onClick={() => setShowAddDay(true)}
-                        aria-label="Add day"
-                      >
-                        <Plus size={16} /> Add Day
-                      </button>
-                      <button
-                        className="btn btn-ghost"
-                        onClick={() => openEdit(selectedWeekend)}
-                        aria-label="Edit weekend"
-                      >
-                        <Edit3 size={16} /> Edit
-                      </button>
-                      <button
-                        className="btn btn-primary"
-                        aria-label="Export PNG"
-                        onClick={async () => {
-                          const node = exportRef.current;
-                          if (!node) return;
-                          await exportNodeToPng(node, {
-                            filename: `${
-                              selectedWeekend.title || "weekend"
-                            }.png`,
-                            pixelRatio: 2,
-                          });
-                        }}
-                      >
-                        Export PNG
-                      </button>
+              <Card className="bg-base-100">
+                <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
+                  <div className="min-w-0">
+                    <h2 className="card-title break-words">
+                      {selectedWeekend.title}
+                    </h2>
+                    <div className="text-sm opacity-70 break-words">
+                      {new Date(
+                        selectedWeekend.start_date
+                      ).toLocaleDateString()}{" "}
+                      –{" "}
+                      {new Date(selectedWeekend.end_date).toLocaleDateString()}
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => setShowAddDay(true)}
+                      aria-label="Add day"
+                    >
+                      <Plus size={16} /> Add Day
+                    </button>
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => openEdit(selectedWeekend)}
+                      aria-label="Edit weekend"
+                    >
+                      <Edit3 size={16} /> Edit
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      aria-label="Export PNG"
+                      onClick={async () => {
+                        const node = exportRef.current;
+                        if (!node) return;
+                        await exportNodeToPng(node, {
+                          filename: `${selectedWeekend.title || "weekend"}.png`,
+                          pixelRatio: 2,
+                        });
+                      }}
+                    >
+                      Export PNG
+                    </button>
+                  </div>
+                </div>
 
-                  <div className="divider my-2" />
+                <div className="divider my-2" />
 
-                  <div className="space-y-4">
-                    {(selectedWeekend.days || []).map((day) => (
-                      <div
-                        key={day.id}
-                        className="rounded-box border border-base-300"
-                      >
-                        <div className="flex items-start sm:items-center justify-between p-3 bg-base-200 rounded-t-box gap-2 flex-col sm:flex-row">
-                          <div className="font-medium break-words">
-                            {new Date(day.date).toLocaleDateString(undefined, {
+                <div className="space-y-4">
+                  {(selectedWeekend.days || []).map((day) => (
+                    <div
+                      key={day.id}
+                      className="rounded-box border border-base-300"
+                    >
+                      <div className="flex items-start sm:items-center justify-between p-3 bg-base-200 rounded-t-box gap-2 flex-col sm:flex-row">
+                        <div className="font-medium break-words">
+                          {day?.day_label}
+                          {/* {new Date(day.date).toLocaleDateString(undefined, {
                               weekday: "long",
                               month: "short",
                               day: "numeric",
-                            })}
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs opacity-70 mr-2">
-                              {`${
-                                (day.activity_instances || []).filter(
-                                  (i) => i.is_completed
-                                ).length
-                              } / ${
-                                (day.activity_instances || []).length
-                              } completed`}
-                            </span>
-                            <button
-                              className="btn btn-ghost btn-sm"
-                              aria-label="Rename day"
-                              onClick={() => openEditDay(day)}
-                            >
-                              <Edit3 size={14} /> Rename
-                            </button>
-                            <button
-                              className="btn btn-ghost btn-sm"
-                              aria-label="Clear completed"
-                              onClick={() => clearCompleted(day)}
-                            >
-                              <Trash2 size={14} /> Clear Completed
-                            </button>
-                            <button
-                              className="btn btn-sm"
-                              aria-label="Add activity"
-                              onClick={() => setShowAddActivityForDay(day)}
-                            >
-                              <Plus size={14} /> Add Activity
-                            </button>
-                          </div>
+                            })} */}
                         </div>
-                        <div className="p-3 space-y-2">
-                          {(day.activity_instances || []).length === 0 && (
-                            <div className="text-sm opacity-70">
-                              No activities yet.
-                            </div>
-                          )}
-                          {(day.activity_instances || [])
-                            .slice()
-                            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                            .map((inst) => {
-                              const act = activityMap.get(inst.activity_id);
-                              return (
-                                <div
-                                  key={inst.id}
-                                  className="p-2 rounded-box bg-base-200 flex items-center justify-between gap-3"
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <span className="truncate">
-                                      {act?.icon} {act?.title || "Activity"}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="checkbox"
-                                      className="toggle toggle-sm"
-                                      checked={!!inst.is_completed}
-                                      onChange={() => toggleComplete(inst)}
-                                      aria-label="Completed"
-                                    />
-                                    <div className="dropdown dropdown-end">
-                                      <button
-                                        className="btn btn-xs"
-                                        aria-label="More actions"
-                                        tabIndex={0}
-                                      >
-                                        <MoreVertical size={12} />
-                                      </button>
-                                      <ul
-                                        tabIndex={0}
-                                        className="dropdown-content menu menu-sm bg-base-100 rounded-box z-[1] mt-2 w-48 p-2 shadow"
-                                      >
-                                        <li>
-                                          <div
-                                            className="tooltip"
-                                            data-tip="Move this activity up"
-                                          >
-                                            <button
-                                              onClick={() =>
-                                                reorderInstance(day, inst, "up")
-                                              }
-                                            >
-                                                Move up
-                                            </button>
-                                          </div>
-                                        </li>
-                                        <li>
-                                          <div
-                                            className="tooltip"
-                                            data-tip="Move this activity down"
-                                          >
-                                            <button
-                                              onClick={() =>
-                                                reorderInstance(
-                                                  day,
-                                                  inst,
-                                                  "down"
-                                                )
-                                              }
-                                            >
-                                               Move down
-                                            </button>
-                                          </div>
-                                        </li>
-                                        <li>
-                                          <div
-                                            className="tooltip"
-                                            data-tip="Move to another day"
-                                          >
-                                            <button
-                                              onClick={() =>
-                                                openMove(inst, day.id)
-                                              }
-                                            >
-                                                Move
-                                              activity
-                                            </button>
-                                          </div>
-                                        </li>
-                                        <li>
-                                          <button
-                                            className="text-error"
-                                            onClick={() => removeInstance(inst)}
-                                          >
-                                            <Trash2 size={12} /> Delete
-                                          </button>
-                                        </li>
-                                      </ul>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs opacity-70 mr-2">
+                            {`${
+                              (day.activity_instances || []).filter(
+                                (i) => i.is_completed
+                              ).length
+                            } / ${
+                              (day.activity_instances || []).length
+                            } completed`}
+                          </span>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            aria-label="Rename day"
+                            onClick={() => openEditDay(day)}
+                          >
+                            <Edit3 size={14} /> Rename
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            aria-label="Clear completed"
+                            onClick={() => clearCompleted(day)}
+                          >
+                            <Trash2 size={14} /> Clear Completed
+                          </button>
+                          <button
+                            className="btn btn-sm"
+                            aria-label="Add activity"
+                            onClick={() => setShowAddActivityForDay(day)}
+                          >
+                            <Plus size={14} /> Add Activity
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="p-3 space-y-2">
+                        {(day.activity_instances || []).length === 0 && (
+                          <div className="text-sm opacity-70">
+                            No activities yet.
+                          </div>
+                        )}
+                        {(day.activity_instances || [])
+                          .slice()
+                          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                          .map((inst) => {
+                            const act = activityMap.get(inst.activity_id);
+                            return (
+                              <ActivityRow
+                                key={inst.id}
+                                inst={inst}
+                                act={act}
+                                onToggle={() => toggleComplete(inst)}
+                                onReorderUp={() =>
+                                  reorderInstance(day, inst, "up")
+                                }
+                                onReorderDown={() =>
+                                  reorderInstance(day, inst, "down")
+                                }
+                                onMove={() => openMove(inst, day.id)}
+                                onDelete={() => removeInstance(inst)}
+                              />
+                            );
+                          })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </Card>
             ) : (
-              <div className="card bg-base-200">
-                <div className="card-body">
-                  <div className="text-sm opacity-70">
-                    Select a weekend to view details, or create a new one.
-                  </div>
+              <Card className="bg-base-200">
+                <div className="text-sm opacity-70">
+                  Select a weekend to view details, or create a new one.
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         </div>

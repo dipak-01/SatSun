@@ -166,7 +166,7 @@ function Dashboard() {
             id="activities-heading"
             className="text-2xl sm:text-3xl font-semibold tracking-tight"
           >
-            Upcoming Activities
+            Your Activities
           </h2>
           <div className="flex items-center gap-2">
             <button
@@ -220,7 +220,7 @@ function Dashboard() {
             id="weekends-heading"
             className="text-2xl sm:text-3xl font-semibold tracking-tight"
           >
-            Upcoming Weekends
+            Your Weekends
           </h2>
           <div className="flex items-center gap-2">
             <button

@@ -166,7 +166,22 @@ export default function Timeline({
                           {formatLongDate(e.date)}
                         </div>
                         <div className="text-lg font-medium break-words">
-                          {weekendTitle}
+                          <button
+                            type="button"
+                            className="link link-primary"
+                            aria-label={`Open planner for ${weekendTitle}`}
+                            onClick={() =>
+                              navigate(
+                                e.weekend?.id
+                                  ? `/weekend-planner?weekendId=${encodeURIComponent(
+                                      e.weekend.id
+                                    )}`
+                                  : "/weekend-planner"
+                              )
+                            }
+                          >
+                            {weekendTitle}
+                          </button>
                         </div>
                         {mood && (
                           <div className="text-xs opacity-70">Mood: {mood}</div>
@@ -209,11 +224,7 @@ export default function Timeline({
                     </div>
                   </div>
                 </div>
-                <button
-                  className="absolute inset-0 opacity-0 focus:opacity-100"
-                  aria-label={`Open planner for ${weekendTitle}`}
-                  onClick={() => navigate("/weekend-planner")}
-                />
+                {/* Removed full-card navigation; only the title is clickable now */}
               </li>
             );
           })}
