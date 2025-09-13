@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays } from "lucide-react";
-import { getActivities, getWeekends } from "../lib/api";
+import { getActivitiesCached, getWeekendsCached } from "../lib/api";
 import { holidaysBetween } from "../lib/holidays";
 
 function formatLongDate(iso) {
@@ -37,13 +37,23 @@ export default function Timeline({
     async function load() {
       setLoading(true);
       try {
-        const [w, a] = await Promise.all([
-          getWeekends({ includeDays: true }),
-          getActivities({ limit: 500 }),
+        const wCached = getWeekendsCached({ includeDays: true });
+        const aCached = getActivitiesCached({ limit: 500 });
+        const [wInit, aInit] = await Promise.all([
+          wCached.initial,
+          aCached.initial,
+        ]);
+        if (mounted) {
+          if (Array.isArray(wInit)) setWeekends(wInit);
+          if (aInit?.items) setActivities(aInit.items);
+        }
+        const [wFresh, aFresh] = await Promise.all([
+          wCached.refresh,
+          aCached.refresh,
         ]);
         if (!mounted) return;
-        setWeekends(w || []);
-        setActivities(a?.items || []);
+        setWeekends(Array.isArray(wFresh) ? wFresh : []);
+        setActivities(aFresh?.items || []);
       } finally {
         if (mounted) setLoading(false);
       }

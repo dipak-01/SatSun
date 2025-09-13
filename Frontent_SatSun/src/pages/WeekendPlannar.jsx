@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CalendarPlus,
@@ -36,6 +36,7 @@ import MoveInstanceModal from "../components/Planner/MoveInstanceModal";
 import { WEEKEND_TEMPLATES, matchActivityId } from "../lib/templates";
 import Spinner from "../components/ui/Spinner";
 import Card from "../components/ui/Card";
+// offline enqueue removed per request
 
 function toISODate(d) {
   if (!d) return "";
@@ -75,6 +76,9 @@ export default function WeekendPlannar() {
   // Instance edit UI removed per request
   const [moveInstance, setMoveInstance] = useState(null); // { inst, fromDayId, targetDayId }
   const exportRef = useRef(null);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
 
   // Templates UI state (gallery inline; apply remains a modal)
   const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
@@ -111,7 +115,16 @@ export default function WeekendPlannar() {
       }
     }
     load();
-    return () => (mounted = false);
+    const onUp = () => setIsOnline(true);
+    const onDown = () => setIsOnline(false);
+    window.addEventListener("online", onUp);
+    window.addEventListener("offline", onDown);
+    // no offline queue
+    return () => {
+      mounted = false;
+      window.removeEventListener("online", onUp);
+      window.removeEventListener("offline", onDown);
+    };
   }, []);
 
   // When weekendId is present in the URL, select that weekend after data loads
@@ -143,6 +156,7 @@ export default function WeekendPlannar() {
         onReorderDown,
         onMove,
         onDelete,
+        disabled = false,
       }) {
         return (
           <div className="p-2 rounded-box bg-base-200 flex items-center justify-between gap-3">
@@ -158,30 +172,59 @@ export default function WeekendPlannar() {
                 checked={!!inst.is_completed}
                 onChange={onToggle}
                 aria-label="Completed"
+                disabled={disabled}
               />
               <div className="dropdown dropdown-end">
                 <button
                   className="btn btn-xs"
                   aria-label="More actions"
                   tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ")
+                      e.currentTarget.click();
+                  }}
                 >
                   <MoreVertical size={12} />
                 </button>
                 <ul
                   tabIndex={0}
+                  role="menu"
                   className="dropdown-content menu menu-sm bg-base-100 rounded-box z-[1] mt-2 w-48 p-2 shadow"
                 >
                   <li>
-                    <button onClick={onReorderUp}>Move up</button>
+                    <button
+                      role="menuitem"
+                      onClick={onReorderUp}
+                      disabled={disabled}
+                    >
+                      Move up
+                    </button>
                   </li>
                   <li>
-                    <button onClick={onReorderDown}>Move down</button>
+                    <button
+                      role="menuitem"
+                      onClick={onReorderDown}
+                      disabled={disabled}
+                    >
+                      Move down
+                    </button>
                   </li>
                   <li>
-                    <button onClick={onMove}>Move activity</button>
+                    <button
+                      role="menuitem"
+                      onClick={onMove}
+                      disabled={disabled}
+                    >
+                      Move activity
+                    </button>
                   </li>
                   <li>
-                    <button className="text-error" onClick={onDelete}>
+                    <button
+                      role="menuitem"
+                      className="text-error"
+                      onClick={onDelete}
+                      disabled={disabled}
+                    >
                       <Trash2 size={12} /> Delete
                     </button>
                   </li>
@@ -192,6 +235,118 @@ export default function WeekendPlannar() {
         );
       }),
     []
+  );
+
+  // Mutating handlers wrapped in useCallback to keep stable references
+  const removeInstance = useCallback(
+    async (inst) => {
+      await deleteActivityInstance(inst.id);
+      setWeekends((prev) =>
+        prev.map((w) =>
+          w.id === (selectedWeekend?.id || w.id)
+            ? {
+                ...w,
+                days: (w.days || []).map((d) => ({
+                  ...d,
+                  activity_instances: (d.activity_instances || []).filter(
+                    (i) => i.id !== inst.id
+                  ),
+                })),
+              }
+            : w
+        )
+      );
+    },
+    [selectedWeekend?.id]
+  );
+
+  const toggleComplete = useCallback(async (inst) => {
+    const updated = await toggleCompleteActivity(inst.id);
+    setWeekends((prev) =>
+      prev.map((w) => ({
+        ...w,
+        days: (w.days || []).map((d) => ({
+          ...d,
+          activity_instances: (d.activity_instances || []).map((i) =>
+            i.id === inst.id ? { ...i, is_completed: updated.is_completed } : i
+          ),
+        })),
+      }))
+    );
+  }, []);
+
+  const reorderInstance = useCallback(async (day, inst, dir) => {
+    const list = (day.activity_instances || [])
+      .slice()
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const idx = list.findIndex((i) => i.id === inst.id);
+    if (idx < 0) return;
+    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    const a = list[idx];
+    const b = list[swapIdx];
+    const aOrder = a.order ?? idx;
+    const bOrder = b.order ?? swapIdx;
+    await Promise.all([
+      updateActivityInstance(a.id, { order: bOrder }),
+      updateActivityInstance(b.id, { order: aOrder }),
+    ]);
+    setWeekends((prev) =>
+      prev.map((w) =>
+        w.id === day.weekend_plan_id
+          ? {
+              ...w,
+              days: (w.days || []).map((d) =>
+                d.id === day.id
+                  ? {
+                      ...d,
+                      activity_instances: (d.activity_instances || []).map(
+                        (i) =>
+                          i.id === a.id
+                            ? { ...i, order: bOrder }
+                            : i.id === b.id
+                            ? { ...i, order: aOrder }
+                            : i
+                      ),
+                    }
+                  : d
+              ),
+            }
+          : w
+      )
+    );
+  }, []);
+
+  const openMove = useCallback(
+    (inst, fromDayId) => {
+      const targetDefault =
+        (selectedWeekend?.days || []).find((d) => d.id !== fromDayId)?.id ||
+        fromDayId;
+      setMoveInstance({ inst, fromDayId, targetDayId: targetDefault });
+    },
+    [selectedWeekend?.days]
+  );
+
+  // Stable callbacks for ActivityRow props that close over the above handlers
+  const onToggleCb = useCallback(
+    (inst) => () => toggleComplete(inst),
+    [toggleComplete]
+  );
+  const onReorderUpCb = useCallback(
+    (day, inst) => () => reorderInstance(day, inst, "up"),
+    [reorderInstance]
+  );
+  const onReorderDownCb = useCallback(
+    (day, inst) => () => reorderInstance(day, inst, "down"),
+    [reorderInstance]
+  );
+  const onMoveCb = useCallback(
+    (inst, dayId) => () => openMove(inst, dayId),
+    [openMove]
+  );
+  const onDeleteCb = useCallback(
+    (inst) => () => removeInstance(inst),
+    [removeInstance]
   );
 
   function resetCreate() {
@@ -289,40 +444,6 @@ export default function WeekendPlannar() {
     setOrderHint("");
   }
 
-  async function removeInstance(inst) {
-    await deleteActivityInstance(inst.id);
-    setWeekends((prev) =>
-      prev.map((w) =>
-        w.id === (selectedWeekend?.id || w.id)
-          ? {
-              ...w,
-              days: (w.days || []).map((d) => ({
-                ...d,
-                activity_instances: (d.activity_instances || []).filter(
-                  (i) => i.id !== inst.id
-                ),
-              })),
-            }
-          : w
-      )
-    );
-  }
-
-  async function toggleComplete(inst) {
-    const updated = await toggleCompleteActivity(inst.id);
-    setWeekends((prev) =>
-      prev.map((w) => ({
-        ...w,
-        days: (w.days || []).map((d) => ({
-          ...d,
-          activity_instances: (d.activity_instances || []).map((i) =>
-            i.id === inst.id ? { ...i, is_completed: updated.is_completed } : i
-          ),
-        })),
-      }))
-    );
-  }
-
   // Add a new day to the selected weekend
   async function handleAddDay(e) {
     e?.preventDefault?.();
@@ -380,49 +501,6 @@ export default function WeekendPlannar() {
   }
 
   // Reorder an instance within a day (swap with neighbor)
-  async function reorderInstance(day, inst, dir) {
-    const list = (day.activity_instances || [])
-      .slice()
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const idx = list.findIndex((i) => i.id === inst.id);
-    if (idx < 0) return;
-    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= list.length) return;
-    const a = list[idx];
-    const b = list[swapIdx];
-    // swap orders
-    const aOrder = a.order ?? idx;
-    const bOrder = b.order ?? swapIdx;
-    await Promise.all([
-      updateActivityInstance(a.id, { order: bOrder }),
-      updateActivityInstance(b.id, { order: aOrder }),
-    ]);
-    // update local
-    setWeekends((prev) =>
-      prev.map((w) =>
-        w.id === day.weekend_plan_id
-          ? {
-              ...w,
-              days: (w.days || []).map((d) =>
-                d.id === day.id
-                  ? {
-                      ...d,
-                      activity_instances: (d.activity_instances || []).map(
-                        (i) =>
-                          i.id === a.id
-                            ? { ...i, order: bOrder }
-                            : i.id === b.id
-                            ? { ...i, order: aOrder }
-                            : i
-                      ),
-                    }
-                  : d
-              ),
-            }
-          : w
-      )
-    );
-  }
 
   // Clear completed instances from a day
   async function clearCompleted(day) {
@@ -452,12 +530,7 @@ export default function WeekendPlannar() {
   // Notes & custom mood editing removed
 
   // Move instance to another day (create in target, delete from source)
-  function openMove(inst, fromDayId) {
-    const targetDefault =
-      (selectedWeekend?.days || []).find((d) => d.id !== fromDayId)?.id ||
-      fromDayId;
-    setMoveInstance({ inst, fromDayId, targetDayId: targetDefault });
-  }
+
   async function handleMoveInstance() {
     if (!moveInstance) return;
     const { inst, fromDayId, targetDayId } = moveInstance;
@@ -521,8 +594,18 @@ export default function WeekendPlannar() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center min-h-[40vh]">
-          <Spinner />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[40vh]">
+          <div className="lg:col-span-4 space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="skeleton h-16 w-full"></div>
+            ))}
+          </div>
+          <div className="lg:col-span-8 space-y-3">
+            <div className="skeleton h-8 w-1/2"></div>
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="skeleton h-10 w-full"></div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -543,6 +626,7 @@ export default function WeekendPlannar() {
                     }`}
                     role="button"
                     aria-pressed={selectedId === w.id}
+                    aria-label={`Select weekend ${w.title}`}
                     tabIndex={0}
                     onClick={() => setSelectedId(w.id)}
                     onKeyDown={(e) => {
@@ -611,10 +695,16 @@ export default function WeekendPlannar() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
+                    {!isOnline && (
+                      <span className="badge badge-warning badge-soft">
+                        Offline
+                      </span>
+                    )}
                     <button
                       className="btn btn-ghost"
                       onClick={() => setShowAddDay(true)}
                       aria-label="Add day"
+                      disabled={!isOnline}
                     >
                       <Plus size={16} /> Add Day
                     </button>
@@ -622,6 +712,7 @@ export default function WeekendPlannar() {
                       className="btn btn-ghost"
                       onClick={() => openEdit(selectedWeekend)}
                       aria-label="Edit weekend"
+                      disabled={!isOnline}
                     >
                       <Edit3 size={16} /> Edit
                     </button>
@@ -673,6 +764,7 @@ export default function WeekendPlannar() {
                             className="btn btn-ghost btn-sm"
                             aria-label="Rename day"
                             onClick={() => openEditDay(day)}
+                            disabled={!isOnline}
                           >
                             <Edit3 size={14} /> Rename
                           </button>
@@ -680,6 +772,7 @@ export default function WeekendPlannar() {
                             className="btn btn-ghost btn-sm"
                             aria-label="Clear completed"
                             onClick={() => clearCompleted(day)}
+                            disabled={!isOnline}
                           >
                             <Trash2 size={14} /> Clear Completed
                           </button>
@@ -687,6 +780,7 @@ export default function WeekendPlannar() {
                             className="btn btn-sm"
                             aria-label="Add activity"
                             onClick={() => setShowAddActivityForDay(day)}
+                            disabled={!isOnline}
                           >
                             <Plus size={14} /> Add Activity
                           </button>
@@ -708,15 +802,12 @@ export default function WeekendPlannar() {
                                 key={inst.id}
                                 inst={inst}
                                 act={act}
-                                onToggle={() => toggleComplete(inst)}
-                                onReorderUp={() =>
-                                  reorderInstance(day, inst, "up")
-                                }
-                                onReorderDown={() =>
-                                  reorderInstance(day, inst, "down")
-                                }
-                                onMove={() => openMove(inst, day.id)}
-                                onDelete={() => removeInstance(inst)}
+                                onToggle={onToggleCb(inst)}
+                                onReorderUp={onReorderUpCb(day, inst)}
+                                onReorderDown={onReorderDownCb(day, inst)}
+                                onMove={onMoveCb(inst, day.id)}
+                                onDelete={onDeleteCb(inst)}
+                                disabled={!isOnline}
                               />
                             );
                           })}

@@ -5,7 +5,7 @@ import {
   ChevronRight,
   Calendar as CalendarIcon,
 } from "lucide-react";
-import { getActivities, getWeekends } from "../lib/api";
+import { getActivitiesCached, getWeekendsCached } from "../lib/api";
 import {
   holidaysByLocalKey,
   holidaysInMonth,
@@ -80,13 +80,23 @@ export default function Calender() {
     async function load() {
       setLoading(true);
       try {
-        const [w, a] = await Promise.all([
-          getWeekends({ includeDays: true }),
-          getActivities({ limit: 500 }),
+        const wCached = getWeekendsCached({ includeDays: true });
+        const aCached = getActivitiesCached({ limit: 500 });
+        const [wInit, aInit] = await Promise.all([
+          wCached.initial,
+          aCached.initial,
+        ]);
+        if (mounted) {
+          if (Array.isArray(wInit)) setWeekends(wInit);
+          if (aInit?.items) setActivities(aInit.items);
+        }
+        const [wFresh, aFresh] = await Promise.all([
+          wCached.refresh,
+          aCached.refresh,
         ]);
         if (!mounted) return;
-        setWeekends(w || []);
-        setActivities(a?.items || []);
+        setWeekends(Array.isArray(wFresh) ? wFresh : []);
+        setActivities(aFresh?.items || []);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -253,10 +263,21 @@ export default function Calender() {
             const instances = entry?.instances || [];
             const cellClass = isSameMonth(d) ? "bg-base-100" : "bg-base-200/60";
             const holidayList = holidayMap.get(key) || [];
+            const ariaLabel = `${d.toLocaleDateString(undefined, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}. ${holidayList.length} holiday${
+              holidayList.length === 1 ? "" : "s"
+            }. ${instances.length} activit${
+              instances.length === 1 ? "y" : "ies"
+            }`;
             return (
               <div
                 key={idx}
                 role="gridcell"
+                aria-label={ariaLabel}
                 aria-selected={false}
                 tabIndex={0}
                 className={`${cellClass} min-h-28 p-2 cursor-pointer hover:bg-base-200 transition-colors`}

@@ -52,3 +52,9 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }   */
+
+/* Accessible focus outlines */
+:where(a, button, [role="button"], [tabindex], input, select, textarea):focus-visible {
+  outline: 2px solid var(--fallback-p, #3b82f6);
+  outline-offset: 2px;
+}

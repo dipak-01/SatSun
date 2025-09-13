@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Edit3, Trash2, Search } from "lucide-react";
 import {
-  getActivities,
+  getActivitiesCached,
   createActivity,
   updateActivity,
   deleteActivity,
@@ -49,9 +49,13 @@ export default function Activity() {
     async function load() {
       setLoading(true);
       try {
-        const data = await getActivities({ limit: 500 });
+        // Use cache-first for activities
+        const cached = getActivitiesCached({ limit: 500 });
+        const initial = await cached.initial;
+        if (mounted && initial?.items) setItems(initial.items || []);
+        const fresh = await cached.refresh;
         if (!mounted) return;
-        setItems(data?.items || []);
+        setItems(fresh?.items || []);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -211,8 +215,10 @@ export default function Activity() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center min-h-[40vh]">
-          <span className="loading loading-dots loading-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 min-h-[40vh]">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="skeleton h-60 w-full"></div>
+          ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="alert">

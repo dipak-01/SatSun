@@ -85,6 +85,8 @@ export const storage = {
   setJSON: lsSetJSON,
 };
 
+// Offline mutation queue removed per request
+
 // Activities cache helpers
 export async function getCachedActivities(params) {
   const key = ACTIVITIES_KEY(params);

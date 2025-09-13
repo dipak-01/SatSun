@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../lib/api";
+import { getWeekendsCached, getActivitiesCached } from "../lib/api";
 import { Calendar, Plus, PartyPopper, Sparkles, Info } from "lucide-react";
 import ActivityCard from "../components/ActivityCard.jsx";
 import WeekendCard from "../components/WeekendCard.jsx";
@@ -22,30 +22,37 @@ function Dashboard() {
       // ignore parse errors
     }
 
-    const getWeekendsList = async () => {
+    let mounted = true;
+    async function load() {
       try {
-        const res = await api.get(`weekends`, {
-          params: { includeDays: true },
-        });
-        setWeekends(res.data);
-      } catch (err) {
-        console.error("Failed to fetch the weekends data", err);
-        setError("Could not load weekends. Please try again.");
-      }
-    };
+        // Cached-first for weekends
+        const weekendsCached = getWeekendsCached({ includeDays: true });
+        const initialWeekends = await weekendsCached.initial;
+        if (mounted && Array.isArray(initialWeekends))
+          setWeekends(initialWeekends);
 
-    const getActivitiesList = async () => {
-      try {
-        const res = await api.get(`activities`);
-        setActivities(res.data);
-      } catch (err) {
-        console.error("Failed to fetch the activities data", err);
-        setError((e) => e || "Could not load activities. Please try again.");
-      }
-    };
+        // Cached-first for activities
+        const activitiesCached = getActivitiesCached({ limit: 500 });
+        const initialActivities = await activitiesCached.initial;
+        if (mounted && initialActivities) setActivities(initialActivities);
 
-    getWeekendsList();
-    getActivitiesList();
+        // Refresh both
+        const [freshWeekends, freshActivities] = await Promise.all([
+          weekendsCached.refresh,
+          activitiesCached.refresh,
+        ]);
+        if (!mounted) return;
+        setWeekends(Array.isArray(freshWeekends) ? freshWeekends : []);
+        setActivities(freshActivities || null);
+      } catch (err) {
+        console.error("Failed to load dashboard data", err);
+        setError((e) => e || "Could not load data. Please try again.");
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const counts = useMemo(
