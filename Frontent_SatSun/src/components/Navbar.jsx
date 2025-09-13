@@ -1,7 +1,31 @@
 import ThemeController from "./ThemeController";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { logout as apiLogout } from "../lib/api";
 
 function Navbar() {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("user");
+    setIsLoggedIn(!!raw);
+  }, []);
+
+  async function handleLogout() {
+    try {
+      await apiLogout();
+    } catch {
+      /* ignore network errors */
+    }
+    try {
+      localStorage.removeItem("user");
+    } catch {
+      /* ignore storage errors */
+    }
+    setIsLoggedIn(false);
+    navigate("/login");
+  }
   return (
     <header
       className="sticky top-0 z-30 bg-base-100/80 backdrop-blur supports-[backdrop-filter]:bg-base-100/60 border-b border-base-300"
@@ -30,7 +54,6 @@ function Navbar() {
           aria-label="Primary"
         >
           <nav className="menu menu-horizontal gap-1">
-             
             <Link
               to="/weekend-planner"
               className="btn btn-ghost"
@@ -133,16 +156,36 @@ function Navbar() {
               role="menu"
               className="dropdown-content menu bg-base-200 rounded-box z-10 w-52 p-2 shadow mt-2"
             >
-              <li>
-                <Link role="menuitem" to="/login">
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link role="menuitem" to="/register">
-                  Register
-                </Link>
-              </li>
+              {isLoggedIn ? (
+                <>
+                  <li className="menu-title px-2 py-1">
+                    <span className="text-xs opacity-70">Account</span>
+                  </li>
+                  <li>
+                    <button
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="justify-between"
+                    >
+                      Logout
+                      <span className="badge badge-soft">Ctrl+L</span>
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link role="menuitem" to="/login">
+                      Login
+                    </Link>
+                  </li>
+                  <li>
+                    <Link role="menuitem" to="/register">
+                      Register
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </div>

@@ -46,13 +46,16 @@ export default function Login() {
           <div className="flex justify-between">
             <h2 className="text-3xl font-bold py-2">Login</h2>
           </div>
+          <p className="text-sm opacity-80 mb-2">
+            Just click the Login button below to proceed.
+          </p>
           {error && (
             <div className="alert alert-error text-sm py-2">{error}</div>
           )}
           {message && !error && (
             <div className="alert alert-success text-sm py-2">{message}</div>
           )}
-          <label className="input validator">
+          <label className="input validator w-full">
             <svg
               className="h-[1em] opacity-50"
               xmlns="http://www.w3.org/2000/svg"
@@ -78,10 +81,11 @@ export default function Login() {
               autoComplete="email"
               required
               defaultValue={"dipak@gmail.com"}
+              className="w-full"
             />
           </label>
           <div className="validator-hint hidden">Enter valid email address</div>
-          <label className="input validator">
+          <label className="input validator w-full">
             <svg
               className="h-[1em] opacity-50"
               xmlns="http://www.w3.org/2000/svg"
@@ -106,6 +110,7 @@ export default function Login() {
               required
               placeholder="Password"
               defaultValue={"abcd1234"}
+              className="w-full"
             />
           </label>
           <p className="validator-hint hidden">

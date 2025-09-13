@@ -159,4 +159,9 @@ export async function toggleCompleteActivity(instanceId) {
   return data;
 }
 
+export async function logout() {
+  const { data } = await api.post(`auth/logout`);
+  return data;
+}
+
 export default api;

@@ -3,13 +3,19 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import "./App.css";
 import Login from "./pages/Login";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Register from "./pages/Register";
- 
+
 import WeekendPlannar from "./pages/WeekendPlannar";
 import Calender from "./pages/Calender";
 import Timeline from "./pages/Timeline";
 import Activity from "./pages/Activity";
+
+function RequireAuth({ children }) {
+  const isLoggedIn = !!localStorage.getItem("user");
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  return children;
+}
 
 const App = () => {
   return (
@@ -18,7 +24,14 @@ const App = () => {
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/" element={<Dashboard />}></Route>
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <Dashboard />
+                </RequireAuth>
+              }
+            ></Route>
 
             <Route path="/weekend-planner" element={<WeekendPlannar />}></Route>
             <Route path="/calendar" element={<Calender />}></Route>

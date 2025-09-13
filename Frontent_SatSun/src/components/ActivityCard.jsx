@@ -32,7 +32,7 @@ export default function ActivityCard({ data }) {
   // }
 
   return (
-    <div className="card bg-base-100 w-full sm:min-w-72 sm:w-96 border border-base-300 hover:border-primary/40 transition-colors shadow-sm h-60">
+    <div className="card bg-base-100 w-[88vw] max-w-sm min-w-[16rem] sm:w-80 md:w-96 border border-base-300 hover:border-primary/40 transition-colors shadow-sm h-60">
       <div className="card-body gap-3 h-full flex flex-col">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2 min-w-0">

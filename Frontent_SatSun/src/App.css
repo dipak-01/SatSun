@@ -1,7 +1,7 @@
 
 @import "tailwindcss";
 @plugin "daisyui" {
-   
+   themes:all;
 };
 
 @plugin "daisyui/theme" {
@@ -183,6 +183,18 @@
     'Noto Color Emoji';
   
 }
+:root,
+html {
+  /* Global base font size to scale all rem-based typography */
+  font-size: 18px;
+
+}
+@media (max-width: 640px) {
+  :root,
+  html {
+    font-size: 14px;
+  }}
+
 :focus-visible {
   outline: 3px solid oklch(74% 0.16 232.661);
   outline-offset: 2px;

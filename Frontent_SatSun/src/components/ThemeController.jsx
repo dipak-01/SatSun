@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 
 const THEME_KEY = "theme";
 const THEMES = [
-  { value: "dark", label: "Default" },
-  { value: "light", label: "Chill & Cozy" },
-  { value: "peakpulse", label: "Active & Adventurous" },
-  { value: "confettiglow-light", label: "Social & Festive" },
-  { value: "caramellatte", label: "Creative & Inspiring" },
-  { value: "lemonade", label: "Mindful & Reset" },
+  { value: "corporate", label: "Default" },
+  { value: "winter", label: "Chill & Cozy" },
+  { value: "forest", label: "Active & Adventurous" },
+  { value: "emerald", label: "Social & Festive" },
+  { value: "light", label: "Creative & Inspiring" },
+  { value: "dracula", label: "Mindful & Reset" },
 ];
 
 export default function ThemeController() {

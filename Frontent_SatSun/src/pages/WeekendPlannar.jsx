@@ -72,8 +72,7 @@ export default function WeekendPlannar() {
   const [moveInstance, setMoveInstance] = useState(null); // { inst, fromDayId, targetDayId }
   const exportRef = useRef(null);
 
-  // Templates UI state
-  const [showTemplates, setShowTemplates] = useState(false);
+  // Templates UI state (gallery inline; apply remains a modal)
   const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
@@ -537,13 +536,6 @@ export default function WeekendPlannar() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <button
                         className="btn btn-ghost"
-                        onClick={() => setShowTemplates(true)}
-                        aria-label="Templates"
-                      >
-                        Templates
-                      </button>
-                      <button
-                        className="btn btn-ghost"
                         onClick={() => setShowAddDay(true)}
                         aria-label="Add day"
                       >
@@ -799,41 +791,21 @@ export default function WeekendPlannar() {
         </div>
       )}
 
-      {/* Templates gallery modal */}
-      {showTemplates && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
-          <div className="modal-box w-full max-w-2xl relative">
-            <button
-              aria-label="Close"
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={() => setShowTemplates(false)}
-            >
-              ✕
-            </button>
-            <h3 className="font-bold text-lg text-center">Weekend templates</h3>
-            <p className="text-sm opacity-70 text-center mt-1">
-              Pick a template to quickly plan your weekend.
-            </p>
-            <div className="mt-4">
-              <TemplateGallery
-                templates={WEEKEND_TEMPLATES}
-                onSelect={(t) => {
-                  setSelectedTemplate(t);
-                  setApplyTemplateOpen(true);
-                  setShowTemplates(false);
-                }}
-              />
-            </div>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setShowTemplates(false)}
-          >
-            <button>close</button>
-          </form>
-        </dialog>
-      )}
+      {/* Inline templates section */}
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-2">Weekend templates</h2>
+        <p className="text-sm opacity-70 mb-4">
+          Pick a template to quickly plan a weekend. You can tweak details in
+          the next step.
+        </p>
+        <TemplateGallery
+          templates={WEEKEND_TEMPLATES}
+          onSelect={(t) => {
+            setSelectedTemplate(t);
+            setApplyTemplateOpen(true);
+          }}
+        />
+      </div>
 
       {/* Apply template modal */}
       {applyTemplateOpen && selectedTemplate && (
