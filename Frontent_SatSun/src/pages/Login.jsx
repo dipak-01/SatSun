@@ -23,8 +23,11 @@ export default function Login() {
 
         // Persist minimal user info if needed
         if (data?.user) {
-          console.log("first");
-          localStorage.setItem("user", data.user);
+          try {
+            localStorage.setItem("user", JSON.stringify(data.user));
+          } catch {
+            /* ignore */
+          }
         }
       }
     } catch {

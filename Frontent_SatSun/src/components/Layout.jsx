@@ -1,5 +1,7 @@
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import InstallPrompt from "./InstallPrompt";
+import OnboardingTips from "./OnboardingTips";
 
 export default function Layout({ children }) {
   return (
@@ -12,6 +14,8 @@ export default function Layout({ children }) {
       >
         {children}
       </main>
+      <InstallPrompt />
+      <OnboardingTips />
       <Footer />
     </div>
   );

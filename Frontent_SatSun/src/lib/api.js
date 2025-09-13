@@ -23,6 +23,74 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// --- Auth handling: auto-refresh & auto-logout on expiry ---
+let refreshPromise = null; // gate concurrent 401s
+
+async function performLogoutAndRedirect() {
+  try {
+    // Avoid looping interceptors on logout call
+    await api.post(`auth/logout`, null, { __isLogout: true }).catch(() => {});
+  } catch {
+    /* ignore */
+  }
+  try {
+    localStorage.removeItem("user");
+  } catch {
+    /* ignore */
+  }
+  // Hard redirect to login
+  if (typeof window !== "undefined") {
+    const here = window.location?.pathname || "";
+    if (here !== "/login") window.location.assign("/login");
+  }
+}
+
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const { config, response } = error || {};
+    const status = response?.status;
+    const isAuthEndpoint =
+      config?.url?.includes("auth/refresh") ||
+      config?.url?.includes("auth/login") ||
+      config?.url?.includes("auth/register") ||
+      config?.__isRefresh ||
+      config?.__isLogout;
+
+    // If unauthorized and not already retried, try refresh once
+    if (status === 401 && config && !config._retry && !isAuthEndpoint) {
+      config._retry = true;
+      if (!refreshPromise) {
+        // Start a single refresh request all 401s will await
+        refreshPromise = api
+          .post(`auth/refresh`, null, { __isRefresh: true })
+          .then(() => {
+            refreshPromise = null;
+          })
+          .catch((e) => {
+            refreshPromise = null;
+            throw e;
+          });
+      }
+      try {
+        await refreshPromise;
+        // Retry original request after successful refresh
+        return api.request(config);
+      } catch {
+        // Refresh failed: logout and redirect
+        await performLogoutAndRedirect();
+        return Promise.reject(error);
+      }
+    }
+
+    // If refresh itself failed with 401, force logout
+    if (status === 401 && isAuthEndpoint) {
+      await performLogoutAndRedirect();
+    }
+    return Promise.reject(error);
+  }
+);
+
 export async function getActivities({ limit = 200, offset = 0 } = {}) {
   const { data } = await api.get(`activities`, {
     params: { limit, offset },

@@ -30,14 +30,44 @@ const ExportWeekendCard = forwardRef(function ExportWeekendCard(
   if (!weekend) return null;
 
   return (
-    <div ref={ref} className="w-[960px] bg-base-100 text-base-content">
-      <div className="p-6 border-b border-base-300">
-        <div className="text-2xl font-semibold">{weekend.title}</div>
-        <div className="opacity-70">{dateRange}</div>
-        {weekend.mood && (
-          <div className="mt-1 text-sm">Mood: {weekend.mood}</div>
-        )}
+    <div
+      ref={ref}
+      className="w-[960px] bg-base-100 text-base-content"
+      style={{
+        backgroundImage:
+          "repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 32px)",
+        backgroundSize: "32px 32px",
+      }}
+    >
+      {/* Banner */}
+      <div className="relative overflow-hidden">
+        <div className="h-32 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20" />
+        <div className="absolute inset-0 flex items-center justify-between px-6">
+          <div>
+            <div className="text-3xl font-bold tracking-tight">
+              {weekend.title}
+            </div>
+            <div className="inline-block mt-2 px-3 py-1 rounded-full bg-base-100/80 border border-base-300 text-sm">
+              {dateRange}
+            </div>
+          </div>
+          {/* QR placeholder */}
+          <div className="hidden sm:flex items-center">
+            <div className="w-16 h-16 rounded-box bg-base-100 border border-base-300 grid place-items-center text-[10px] opacity-70">
+              QR
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Mood chip */}
+      {weekend.mood && (
+        <div className="px-6 mt-3">
+          <span className="badge badge-soft badge-primary">
+            Mood: {weekend.mood}
+          </span>
+        </div>
+      )}
 
       <div className="p-6 space-y-4">
         {(weekend.days || []).map((day) => (
@@ -59,7 +89,7 @@ const ExportWeekendCard = forwardRef(function ExportWeekendCard(
                   return (
                     <div
                       key={inst.id}
-                      className="p-3 rounded-box border border-base-300 flex items-start justify-between gap-3"
+                      className="p-3 rounded-box border border-base-300 flex items-start justify-between gap-3 bg-base-100/90"
                     >
                       <div className="min-w-0">
                         <div className="font-medium truncate">

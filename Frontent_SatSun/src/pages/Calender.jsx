@@ -6,6 +6,11 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { getActivities, getWeekends } from "../lib/api";
+import {
+  holidaysByLocalKey,
+  holidaysInMonth,
+  localKeyFromDate,
+} from "../lib/holidays";
 import Timeline from "./Timeline";
 
 function startOfMonth(d) {
@@ -124,6 +129,11 @@ export default function Calender() {
   }, [weekends]);
 
   const isSameMonth = (d) => d.getMonth() === monthDate.getMonth();
+  const holidayMap = useMemo(() => holidaysByLocalKey(), []);
+  const monthHolidays = useMemo(
+    () => holidaysInMonth(monthDate.getFullYear(), monthDate.getMonth()),
+    [monthDate]
+  );
 
   const modalEntry = useMemo(() => {
     if (!modalDate) return null;
@@ -242,6 +252,7 @@ export default function Calender() {
             const entry = byDate.get(key);
             const instances = entry?.instances || [];
             const cellClass = isSameMonth(d) ? "bg-base-100" : "bg-base-200/60";
+            const holidayList = holidayMap.get(key) || [];
             return (
               <div
                 key={idx}
@@ -270,6 +281,21 @@ export default function Calender() {
                     )}
                     {d.getDate()}
                   </div>
+                  {holidayList.length > 0 && (
+                    <span
+                      className={`badge badge-xs ${
+                        holidayList.some((h) => h.isGazetted)
+                          ? "badge-error"
+                          : "badge-warning"
+                      }`}
+                      title={holidayList.map((h) => h.name).join(", ")}
+                      aria-label={`${holidayList.length} holiday$${
+                        holidayList.length === 1 ? "" : "s"
+                      }`}
+                    >
+                      HOL
+                    </span>
+                  )}
                 </div>
                 {/* Weekend chips if date is in any weekend span */}
                 <div className="flex flex-wrap gap-1 mb-1">
@@ -319,6 +345,20 @@ export default function Calender() {
                       +{instances.length - 4} more
                     </div>
                   )}
+                  {/* Holidays list snippet */}
+                  {holidayList.slice(0, 2).map((h, i) => (
+                    <div
+                      key={`${key}-hol-${i}`}
+                      className={`text-[11px] px-2 py-1 rounded-box mt-1 flex items-center gap-2 ${
+                        h.isGazetted
+                          ? "bg-error/15 text-error"
+                          : "bg-warning/15 text-warning"
+                      }`}
+                      title={h.type}
+                    >
+                      <span className="truncate">{h.name}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
@@ -327,8 +367,8 @@ export default function Calender() {
       )}
 
       {modalDate && (
-        <dialog className="modal modal-open">
-          <div className="modal-box">
+        <dialog className="modal modal-open modal-bottom sm:modal-middle">
+          <div className="modal-box max-h-[85vh] overflow-y-auto">
             <h3 className="font-bold text-lg">
               {modalDate.toLocaleDateString(undefined, {
                 weekday: "long",
@@ -351,6 +391,30 @@ export default function Calender() {
                 inRange(modalDate, w.start_date, w.end_date)
               ).length === 0 && <span className="badge">No weekend</span>}
             </div>
+
+            {/* Holidays on this date */}
+            {(() => {
+              const key = localKeyFromDate(modalDate);
+              const hols = holidayMap.get(key) || [];
+              if (hols.length === 0) return null;
+              return (
+                <div className="mt-3 space-y-2" aria-label="Holidays">
+                  {hols.map((h, i) => (
+                    <div
+                      key={`hol-${i}`}
+                      className={`card ${
+                        h.isGazetted ? "bg-error/10" : "bg-warning/10"
+                      }`}
+                    >
+                      <div className="card-body py-3 px-4 text-sm gap-1">
+                        <div className="font-medium">{h.name}</div>
+                        <div className="opacity-70 text-xs">{h.type}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Activities planned for this date (ordered, no time) */}
             <div className="space-y-2 max-h-80 overflow-auto pr-1">
@@ -398,6 +462,39 @@ export default function Calender() {
           </form>
         </dialog>
       )}
+
+      {/* Holidays this month */}
+      <section className="mt-6" aria-labelledby="month-holidays-heading">
+        <h2 id="month-holidays-heading" className="text-xl font-semibold mb-2">
+          Holidays this month
+        </h2>
+        {monthHolidays.length === 0 ? (
+          <div className="text-sm opacity-70">No holidays this month.</div>
+        ) : (
+          <ul className="space-y-2">
+            {monthHolidays.map((h, i) => (
+              <li
+                key={`mh-${i}`}
+                className={`rounded-box px-3 py-2 flex items-center justify-between ${
+                  h.isGazetted ? "bg-error/10" : "bg-warning/10"
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{h.name}</div>
+                  <div className="text-xs opacity-70 truncate">{h.type}</div>
+                </div>
+                <div className="text-sm opacity-80 whitespace-nowrap ml-3">
+                  {h.dateObj.toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </section>
   );
 }

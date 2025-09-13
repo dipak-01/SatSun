@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   CalendarPlus,
   Edit3,
@@ -41,6 +42,7 @@ function toISODate(d) {
 }
 
 export default function WeekendPlannar() {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [weekends, setWeekends] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -97,6 +99,14 @@ export default function WeekendPlannar() {
     load();
     return () => (mounted = false);
   }, []);
+
+  // When weekendId is present in the URL, select that weekend after data loads
+  useEffect(() => {
+    const id = searchParams.get("weekendId");
+    if (!id || !Array.isArray(weekends) || weekends.length === 0) return;
+    const found = weekends.find((w) => String(w.id) === String(id));
+    if (found) setSelectedId(found.id);
+  }, [searchParams, weekends]);
 
   const selectedWeekend = useMemo(
     () => weekends.find((w) => w.id === selectedId) || null,
@@ -658,32 +668,51 @@ export default function WeekendPlannar() {
                                         className="dropdown-content menu menu-sm bg-base-100 rounded-box z-[1] mt-2 w-48 p-2 shadow"
                                       >
                                         <li>
-                                          <button
-                                            onClick={() =>
-                                              reorderInstance(day, inst, "up")
-                                            }
+                                          <div
+                                            className="tooltip"
+                                            data-tip="Move this activity up"
                                           >
-                                            <ArrowUp size={12} /> Move up
-                                          </button>
+                                            <button
+                                              onClick={() =>
+                                                reorderInstance(day, inst, "up")
+                                              }
+                                            >
+                                                Move up
+                                            </button>
+                                          </div>
                                         </li>
                                         <li>
-                                          <button
-                                            onClick={() =>
-                                              reorderInstance(day, inst, "down")
-                                            }
+                                          <div
+                                            className="tooltip"
+                                            data-tip="Move this activity down"
                                           >
-                                            <ArrowDown size={12} /> Move down
-                                          </button>
+                                            <button
+                                              onClick={() =>
+                                                reorderInstance(
+                                                  day,
+                                                  inst,
+                                                  "down"
+                                                )
+                                              }
+                                            >
+                                               Move down
+                                            </button>
+                                          </div>
                                         </li>
                                         <li>
-                                          <button
-                                            onClick={() =>
-                                              openMove(inst, day.id)
-                                            }
+                                          <div
+                                            className="tooltip"
+                                            data-tip="Move to another day"
                                           >
-                                            <MoveRight size={12} /> Move
-                                            activity
-                                          </button>
+                                            <button
+                                              onClick={() =>
+                                                openMove(inst, day.id)
+                                              }
+                                            >
+                                                Move
+                                              activity
+                                            </button>
+                                          </div>
                                         </li>
                                         <li>
                                           <button

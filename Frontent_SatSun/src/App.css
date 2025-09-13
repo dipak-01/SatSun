@@ -2,35 +2,36 @@
 @import "tailwindcss";
 @plugin "daisyui" {
    themes:all;
+      
 };
-
+         
 @plugin "daisyui/theme" {
-  name: "dark";
-  default: false;
+  name: "atlan";
+  default: true;
   prefersdark: false;
-  color-scheme: "dark";
-  --color-base-100: oklch(25.33% 0.016 252.42);
-  --color-base-200: oklch(23.26% 0.014 253.1);
-  --color-base-300: oklch(21.15% 0.012 254.09);
-  --color-base-content: oklch(97.807% 0.029 256.847);
-  --color-primary: oklch(58% 0.233 277.117);
-  --color-primary-content: oklch(96% 0.018 272.314);
-  --color-secondary: oklch(65% 0.241 354.308);
-  --color-secondary-content: oklch(94% 0.028 342.258);
-  --color-accent: oklch(77% 0.152 181.912);
-  --color-accent-content: oklch(38% 0.063 188.416);
-  --color-neutral: oklch(14% 0.005 285.823);
-  --color-neutral-content: oklch(92% 0.004 286.32);
-  --color-info: oklch(74% 0.16 232.661);
-  --color-info-content: oklch(29% 0.066 243.157);
-  --color-success: oklch(76% 0.177 163.223);
-  --color-success-content: oklch(37% 0.077 168.94);
-  --color-warning: oklch(82% 0.189 84.429);
-  --color-warning-content: oklch(41% 0.112 45.904);
-  --color-error: oklch(71% 0.194 13.428);
-  --color-error-content: oklch(27% 0.105 12.094);
-  --radius-selector: 0.5rem;
-  --radius-field: 0.25rem;
+  color-scheme: "light";
+  --color-base-100: oklch(100% 0 0); /* Pure White Background */
+  --color-base-200: oklch(97% 0.005 250); /* Very Light Gray (F8F9FA) */
+  --color-base-300: oklch(94% 0.008 250); /* Light Gray Border (E9ECEF) */
+  --color-base-content: oklch(12% 0.01 260); /* Dark Charcoal Text (1A1A1A) */
+  --color-primary: oklch(58% 0.18 265); /* Vibrant Atlan Blue (#0066FF) */
+  --color-primary-content: oklch(100% 0 0); /* White Text on Primary */
+  --color-secondary: oklch(78% 0.12 165); /* Accent Teal/Green (#00C897) */
+  --color-secondary-content: oklch(12% 0.01 260); /* Dark Text on Secondary */
+  --color-accent: oklch(75% 0.18 30); /* Warm Coral/Orange (#FF6B6B) */
+  --color-accent-content: oklch(100% 0 0); /* White Text on Accent */
+  --color-neutral: oklch(12% 0.01 260); /* Dark Charcoal for UI Elements */
+  --color-neutral-content: oklch(100% 0 0); /* White Text on Neutral */
+  --color-info: oklch(58% 0.18 265); /* Same as Primary */
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(78% 0.12 165); /* Same as Secondary (Teal) */
+  --color-success-content: oklch(12% 0.01 260);
+  --color-warning: oklch(80% 0.15 75); /* Standard Orange for Warning */
+  --color-warning-content: oklch(12% 0.01 260);
+  --color-error: oklch(75% 0.18 30); /* Same as Accent (Coral) */
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 0.375rem;
+  --radius-field: 0.375rem;
   --radius-box: 0.5rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
@@ -38,142 +39,6 @@
   --depth: 1;
   --noise: 0;
 }
-
-
-@plugin "daisyui/theme" {
-  name: "light";
-  default: false;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: oklch(98% 0.003 247.858);
-  --color-base-200: oklch(96% 0.007 247.896);
-  --color-base-300: oklch(92% 0.013 255.508);
-  --color-base-content: oklch(20% 0.042 265.755);
-  --color-primary: oklch(70% 0.191 22.216);
-  --color-primary-content: oklch(25% 0.092 26.042);
-  --color-secondary: oklch(75% 0.183 55.934);
-  --color-secondary-content: oklch(26% 0.079 36.259);
-  --color-accent: oklch(77% 0.152 181.912);
-  --color-accent-content: oklch(27% 0.046 192.524);
-  --color-neutral: oklch(44% 0.043 257.281);
-  --color-neutral-content: oklch(98% 0.003 247.858);
-  --color-info: oklch(58% 0.158 241.966);
-  --color-info-content: oklch(97% 0.013 236.62);
-  --color-success: oklch(62% 0.194 149.214);
-  --color-success-content: oklch(98% 0.018 155.826);
-  --color-warning: oklch(64% 0.222 41.116);
-  --color-warning-content: oklch(98% 0.016 73.684);
-  --color-error: oklch(59% 0.249 0.584);
-  --color-error-content: oklch(97% 0.014 343.198);
-  --radius-selector: 2rem;
-  --radius-field: 2rem;
-  --radius-box: 2rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.3125rem;
-  --border: 2px;
-  --depth: 1;
-  --noise: 1;
-}
-                      /* Clean, sharp, no texture */
-@plugin "daisyui/theme" {
-  name: "confettiglow-light";
-  default: false;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: oklch(98% 0.005 80);      /* Warm paper white */
-  --color-base-200: oklch(94% 0.01 85);       /* Soft cream */
-  --color-base-300: oklch(90% 0.015 90);      /* Sun-kissed linen */
-  --color-base-content: oklch(15% 0.01 280);  /* Rich charcoal text */
-  --color-primary: oklch(82% 0.22 340);       /* Rosé sparkle */
-  --color-primary-content: oklch(25% 0.04 330);
-  --color-secondary: oklch(85% 0.18 50);      /* Golden confetti */
-  --color-secondary-content: oklch(20% 0.05 40);
-  --color-accent: oklch(88% 0.24 100);        /* Lime fizz */
-  --color-accent-content: oklch(25% 0.06 90);
-  --color-neutral: oklch(88% 0.01 85);
-  --color-neutral-content: oklch(20% 0.01 270);
-  --color-info: oklch(75% 0.16 250);          /* Sky peek */
-  --color-success: oklch(80% 0.25 140);       /* Tropical punch */
-  --color-warning: oklch(80% 0.3 35);         /* Marigold streamers */
-  --color-error: oklch(75% 0.32 350);         /* Raspberry pop */
-  --radius-box: 1.25rem;
-  --radius-field: 1rem;
-  --border: 0;
-  --depth: 1;
-  --noise: 1.5;                               /* Subtle paper texture */
-}
-
-@plugin "daisyui/theme" {
-  name: "caramellatte";
-  default: false;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: oklch(98% 0.016 73.684);
-  --color-base-200: oklch(95% 0.038 75.164);
-  --color-base-300: oklch(90% 0.076 70.697);
-  --color-base-content: oklch(40% 0.123 38.172);
-  --color-primary: oklch(0% 0 0);
-  --color-primary-content: oklch(100% 0 0);
-  --color-secondary: oklch(22.45% 0.075 37.85);
-  --color-secondary-content: oklch(90% 0.076 70.697);
-  --color-accent: oklch(46.44% 0.111 37.85);
-  --color-accent-content: oklch(90% 0.076 70.697);
-  --color-neutral: oklch(55% 0.195 38.402);
-  --color-neutral-content: oklch(98% 0.016 73.684);
-  --color-info: oklch(42% 0.199 265.638);
-  --color-info-content: oklch(90% 0.076 70.697);
-  --color-success: oklch(43% 0.095 166.913);
-  --color-success-content: oklch(90% 0.076 70.697);
-  --color-warning: oklch(82% 0.189 84.429);
-  --color-warning-content: oklch(41% 0.112 45.904);
-  --color-error: oklch(70% 0.191 22.216);
-  --color-error-content: oklch(39% 0.141 25.723);
-  --radius-selector: 2rem;
-  --radius-field: 0.5rem;
-  --radius-box: 1rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 2px;
-  --depth: 1;
-  --noise: 1;
-}
-
-
-@plugin "daisyui/theme" {
-  name: "lemonade";
-  default: false;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: oklch(98% 0.019 200.873);
-  --color-base-200: oklch(95% 0.045 203.388);
-  --color-base-300: oklch(91% 0.08 205.041);
-  --color-base-content: oklch(39% 0.07 227.392);
-  --color-primary: oklch(0% 0 0);
-  --color-primary-content: oklch(100% 0 0);
-  --color-secondary: oklch(87% 0.01 258.338);
-  --color-secondary-content: oklch(13% 0.028 261.692);
-  --color-accent: oklch(80% 0.105 251.813);
-  --color-accent-content: oklch(28% 0.091 267.935);
-  --color-neutral: oklch(30% 0.056 229.695);
-  --color-neutral-content: oklch(98% 0.019 200.873);
-  --color-info: oklch(60% 0.126 221.723);
-  --color-info-content: oklch(98% 0.019 200.873);
-  --color-success: oklch(60% 0.118 184.704);
-  --color-success-content: oklch(98% 0.014 180.72);
-  --color-warning: oklch(64% 0.222 41.116);
-  --color-warning-content: oklch(98% 0.016 73.684);
-  --color-error: oklch(59% 0.249 0.584);
-  --color-error-content: oklch(97% 0.014 343.198);
-  --radius-selector: 0.25rem;
-  --radius-field: 1rem;
-  --radius-box: 1rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 1;
-  --noise: 0;
-}
-
 #root {
   max-width: 2440px;
   margin: 0 auto;

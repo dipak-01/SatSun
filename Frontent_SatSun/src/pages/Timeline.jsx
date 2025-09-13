@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays } from "lucide-react";
 import { getActivities, getWeekends } from "../lib/api";
+import { holidaysBetween } from "../lib/holidays";
 
 function formatLongDate(iso) {
   try {
@@ -62,15 +63,32 @@ export default function Timeline({
   // Build date-wise entries from all weekends' days
   const entries = useMemo(() => {
     const list = [];
+    let minIso = null;
+    let maxIso = null;
     for (const w of weekends) {
       for (const d of w.days || []) {
+        const iso = d.date;
+        if (iso && (!minIso || iso < minIso)) minIso = iso;
+        if (iso && (!maxIso || iso > maxIso)) maxIso = iso;
         list.push({
-          date: d.date,
+          kind: "day",
+          date: iso,
           weekend: w,
           day: d,
           instances: (d.activity_instances || [])
             .slice()
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+        });
+      }
+    }
+    // Merge holidays in range
+    if (minIso && maxIso) {
+      const hols = holidaysBetween(minIso, maxIso);
+      for (const h of hols) {
+        list.push({
+          kind: "holiday",
+          date: h.dateObj.toISOString(),
+          holiday: h,
         });
       }
     }
@@ -99,7 +117,37 @@ export default function Timeline({
         </div>
       ) : (
         <ol className="relative border-l-2 border-base-300 pl-4 sm:pl-6 space-y-6">
-          {entries.map((e) => {
+          {entries.map((e, idx) => {
+            if (e.kind === "holiday") {
+              const h = e.holiday;
+              return (
+                <li key={`hol-${idx}`} className="relative">
+                  <span className="absolute -left-[11px] sm:-left-[13px] top-1 h-5 w-5 rounded-full bg-base-100 border-2 border-warning grid place-items-center">
+                    <span className="h-2.5 w-2.5 rounded-full bg-warning" />
+                  </span>
+                  <div
+                    className={`card ${
+                      h.isGazetted ? "bg-error/10" : "bg-warning/10"
+                    }`}
+                  >
+                    <div className="card-body py-4 sm:py-5">
+                      <div className="flex items-start sm:items-center justify-between gap-2 flex-col sm:flex-row">
+                        <div className="min-w-0">
+                          <div className="text-sm opacity-70">
+                            {formatLongDate(e.date)}
+                          </div>
+                          <div className="text-lg font-medium break-words">
+                            {h.name}
+                          </div>
+                          <div className="text-xs opacity-70">{h.type}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            }
+
             const weekendTitle = e.weekend?.title || "Weekend";
             const mood = e.weekend?.mood;
             return (
@@ -107,14 +155,11 @@ export default function Timeline({
                 key={`${e.weekend?.id}-${e.day?.id || e.date}`}
                 className="relative"
               >
-                {/* Timeline dot */}
                 <span className="absolute -left-[11px] sm:-left-[13px] top-1 h-5 w-5 rounded-full bg-base-100 border-2 border-primary grid place-items-center">
                   <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                 </span>
-
                 <div className="card bg-base-100">
                   <div className="card-body py-4 sm:py-5">
-                    {/* Date + weekend header */}
                     <div className="flex items-start sm:items-center justify-between gap-2 flex-col sm:flex-row">
                       <div className="min-w-0">
                         <div className="text-sm opacity-70">
@@ -132,8 +177,6 @@ export default function Timeline({
                         {(e.instances || []).length === 1 ? "y" : "ies"}
                       </div>
                     </div>
-
-                    {/* Activities */}
                     <div className="mt-3 flex flex-col gap-2">
                       {(e.instances || []).length === 0 ? (
                         <div className="text-sm opacity-70">
@@ -166,7 +209,6 @@ export default function Timeline({
                     </div>
                   </div>
                 </div>
-                {/* Clickable overlay to open planner */}
                 <button
                   className="absolute inset-0 opacity-0 focus:opacity-100"
                   aria-label={`Open planner for ${weekendTitle}`}

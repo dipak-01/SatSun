@@ -174,7 +174,7 @@ function Dashboard() {
               onClick={() => document.getElementById("my_modal_5").showModal()}
               aria-label="Add activity"
             >
-              <Plus aria-hidden className="w-5 h-5" />
+              <Sparkles aria-hidden className="w-5 h-5" />
               <span>Add Activity</span>
             </button>
             <Link

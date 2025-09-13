@@ -7,7 +7,7 @@ const THEMES = [
   { value: "forest", label: "Active & Adventurous" },
   { value: "emerald", label: "Social & Festive" },
   { value: "light", label: "Creative & Inspiring" },
-  { value: "dracula", label: "Mindful & Reset" },
+  { value: "atlan", label: "Mindful & Reset"  },
 ];
 
 export default function ThemeController() {

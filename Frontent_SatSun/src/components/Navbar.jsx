@@ -1,10 +1,11 @@
 import ThemeController from "./ThemeController";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { logout as apiLogout } from "../lib/api";
 
 function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ function Navbar() {
   }
   return (
     <header
-      className="sticky top-0 z-30 bg-base-100/80 backdrop-blur supports-[backdrop-filter]:bg-base-100/60 border-b border-base-300"
+      className="sticky top-0 z-30 border-b border-base-300 backdrop-blur-md supports-[backdrop-filter]:bg-base-100/60 bg-gradient-to-r from-base-100/80 via-primary/5 to-base-100/80"
       role="banner"
     >
       <a
@@ -42,9 +43,14 @@ function Navbar() {
           <Link
             to="/"
             aria-label="SatSun home"
-            className="btn btn-ghost text-xl font-semibold"
+            className="btn btn-ghost px-2 sm:px-3 text-xl font-bold tracking-tight"
           >
-            SatSun
+            <span className="flex items-center gap-2">
+              <img src="/logo.svg" alt="SatSun" className="h-6 w-6" />
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                SatSun
+              </span>
+            </span>
           </Link>
         </div>
 
@@ -56,21 +62,33 @@ function Navbar() {
           <nav className="menu menu-horizontal gap-1">
             <Link
               to="/weekend-planner"
-              className="btn btn-ghost"
+              className={`btn btn-ghost btn-sm rounded-full ${
+                location.pathname.startsWith("/weekend-planner")
+                  ? "btn-active text-primary bg-primary/10"
+                  : "hover:bg-base-200"
+              }`}
               aria-label="Planner"
             >
               Planner
             </Link>
             <Link
               to="/activities"
-              className="btn btn-ghost"
+              className={`btn btn-ghost btn-sm rounded-full ${
+                location.pathname.startsWith("/activities")
+                  ? "btn-active text-primary bg-primary/10"
+                  : "hover:bg-base-200"
+              }`}
               aria-label="Activities"
             >
               Activities
             </Link>
             <Link
               to="/calendar"
-              className="btn btn-ghost"
+              className={`btn btn-ghost btn-sm rounded-full ${
+                location.pathname.startsWith("/calendar")
+                  ? "btn-active text-primary bg-primary/10"
+                  : "hover:bg-base-200"
+              }`}
               aria-label="Calendar"
             >
               Calendar
@@ -86,7 +104,7 @@ function Navbar() {
               role="button"
               aria-haspopup="menu"
               aria-label="Open menu"
-              className="btn btn-ghost"
+              className="btn btn-ghost btn-square"
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.currentTarget.click();
@@ -114,17 +132,41 @@ function Navbar() {
                 </Link>
               </li> */}
               <li>
-                <Link role="menuitem" to="/weekend-planner">
+                <Link
+                  role="menuitem"
+                  to="/weekend-planner"
+                  className={
+                    location.pathname.startsWith("/weekend-planner")
+                      ? "active"
+                      : undefined
+                  }
+                >
                   Planner
                 </Link>
               </li>
               <li>
-                <Link role="menuitem" to="/activities">
+                <Link
+                  role="menuitem"
+                  to="/activities"
+                  className={
+                    location.pathname.startsWith("/activities")
+                      ? "active"
+                      : undefined
+                  }
+                >
                   Activities
                 </Link>
               </li>
               <li>
-                <Link role="menuitem" to="/calendar">
+                <Link
+                  role="menuitem"
+                  to="/calendar"
+                  className={
+                    location.pathname.startsWith("/calendar")
+                      ? "active"
+                      : undefined
+                  }
+                >
                   Calendar
                 </Link>
               </li>
@@ -144,7 +186,7 @@ function Navbar() {
                 }
               }}
             >
-              <div className="ring-primary ring-offset-base-100 w-8 rounded-full ring-2 ring-offset-2">
+              <div className="ring-primary ring-offset-base-100 w-8 rounded-full ring-2 ring-offset-2 hover:ring-4 transition-all">
                 <img
                   src="https://img.daisyui.com/images/profile/demo/spiderperson@192.webp"
                   alt="User avatar"

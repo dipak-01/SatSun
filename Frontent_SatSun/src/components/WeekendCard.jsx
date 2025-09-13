@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, Share2 } from "lucide-react";
 import { exportNodeToPng } from "../lib/exportImage";
 import ExportWeekendCard from "./ExportWeekendCard";
@@ -6,6 +7,7 @@ import ExportWeekendCard from "./ExportWeekendCard";
 export default function WeekendCard({ data, activityMap }) {
   const { start_date, end_date, title, mood, shared } = data || {};
   const exportRef = useRef(null);
+  const navigate = useNavigate();
 
   function formatPart(d) {
     if (!d) return "";
@@ -79,7 +81,18 @@ export default function WeekendCard({ data, activityMap }) {
           >
             <Share2 size={18} />
           </button>
-          <button className="btn btn-primary btn-sm">Open</button>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              if (!data?.id) return;
+              navigate(
+                `/weekend-planner?weekendId=${encodeURIComponent(data.id)}`
+              );
+            }}
+            title="Open in Weekend Planner"
+          >
+            Open
+          </button>
         </div>
       </div>
 

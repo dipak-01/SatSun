@@ -11,7 +11,7 @@ export default function CreateActivityModal({
   if (!open) return null;
   return (
     <dialog className="modal modal-open modal-bottom sm:modal-middle">
-      <div className="modal-box w-full max-w-lg relative">
+      <div className="modal-box w-full max-w-lg max-h-[85vh] overflow-y-auto relative">
         <button
           aria-label="Close"
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
