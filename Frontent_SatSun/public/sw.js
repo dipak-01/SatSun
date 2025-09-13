@@ -27,6 +27,10 @@ self.addEventListener("activate", (event) => {
 // Network-first for HTML, cache-first for others
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+
+  // Only handle and cache GET requests; let others pass through
+  if (request.method !== "GET") return;
+
   const isHTML = request.headers.get("accept")?.includes("text/html");
 
   if (isHTML) {
@@ -44,16 +48,14 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      return (
-        cached ||
-        fetch(request)
-          .then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-            return res;
-          })
-          .catch(() => cached)
-      );
+      if (cached) return cached;
+      return fetch(request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return res;
+        })
+        .catch(() => cached);
     })
   );
 });

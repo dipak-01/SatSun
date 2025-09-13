@@ -1,15 +1,6 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  CalendarPlus,
-  Edit3,
-  Trash2,
-  Plus,
-  ArrowUp,
-  ArrowDown,
-  MoveRight,
-  MoreVertical,
-} from "lucide-react";
+import { CalendarPlus, Edit3, Trash2, Plus } from "lucide-react";
 import {
   getWeekendsCached,
   getActivitiesCached,
@@ -37,12 +28,11 @@ import { WEEKEND_TEMPLATES, matchActivityId } from "../lib/templates";
 import Spinner from "../components/ui/Spinner";
 import Card from "../components/ui/Card";
 // offline enqueue removed per request
-
-function toISODate(d) {
-  if (!d) return "";
-  const dt = new Date(d);
-  return dt.toISOString();
-}
+import ActivityRow from "../components/Planner/ActivityRow";
+import { toISODate } from "../lib/date";
+import { byOrder } from "../lib/sort";
+import { activateOnKeyDown } from "../lib/a11y";
+import { byIdMap } from "../lib/collection";
 
 export default function WeekendPlannar() {
   const [searchParams] = useSearchParams();
@@ -139,103 +129,9 @@ export default function WeekendPlannar() {
     () => weekends.find((w) => w.id === selectedId) || null,
     [weekends, selectedId]
   );
-  const activityMap = useMemo(() => {
-    const m = new Map();
-    for (const a of activities) m.set(a.id, a);
-    return m;
-  }, [activities]);
+  const activityMap = useMemo(() => byIdMap(activities, "id"), [activities]);
 
-  // Lightweight memoized row for performance when there are 50+ items
-  const ActivityRow = useMemo(
-    () =>
-      memo(function ActivityRow({
-        inst,
-        act,
-        onToggle,
-        onReorderUp,
-        onReorderDown,
-        onMove,
-        onDelete,
-        disabled = false,
-      }) {
-        return (
-          <div className="p-2 rounded-box bg-base-200 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="truncate">
-                {act?.icon} {act?.title || "Activity"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                className="toggle toggle-sm"
-                checked={!!inst.is_completed}
-                onChange={onToggle}
-                aria-label="Completed"
-                disabled={disabled}
-              />
-              <div className="dropdown dropdown-end">
-                <button
-                  className="btn btn-xs"
-                  aria-label="More actions"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ")
-                      e.currentTarget.click();
-                  }}
-                >
-                  <MoreVertical size={12} />
-                </button>
-                <ul
-                  tabIndex={0}
-                  role="menu"
-                  className="dropdown-content menu menu-sm bg-base-100 rounded-box z-[1] mt-2 w-48 p-2 shadow"
-                >
-                  <li>
-                    <button
-                      role="menuitem"
-                      onClick={onReorderUp}
-                      disabled={disabled}
-                    >
-                      Move up
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      role="menuitem"
-                      onClick={onReorderDown}
-                      disabled={disabled}
-                    >
-                      Move down
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      role="menuitem"
-                      onClick={onMove}
-                      disabled={disabled}
-                    >
-                      Move activity
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      role="menuitem"
-                      className="text-error"
-                      onClick={onDelete}
-                      disabled={disabled}
-                    >
-                      <Trash2 size={12} /> Delete
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        );
-      }),
-    []
-  );
+  // ActivityRow now a reusable component
 
   // Mutating handlers wrapped in useCallback to keep stable references
   const removeInstance = useCallback(
@@ -629,12 +525,7 @@ export default function WeekendPlannar() {
                     aria-label={`Select weekend ${w.title}`}
                     tabIndex={0}
                     onClick={() => setSelectedId(w.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setSelectedId(w.id);
-                      }
-                    }}
+                    onKeyDown={activateOnKeyDown(() => setSelectedId(w.id))}
                   >
                     <div>
                       <div className="font-medium">{w.title}</div>
@@ -794,7 +685,7 @@ export default function WeekendPlannar() {
                         )}
                         {(day.activity_instances || [])
                           .slice()
-                          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                          .sort(byOrder)
                           .map((inst) => {
                             const act = activityMap.get(inst.activity_id);
                             return (
