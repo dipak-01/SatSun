@@ -135,7 +135,6 @@ npm test
 
 ## 🔭 Future Scope
 
-- Offline mutation queue: queue writes while offline and replay when back online.
 - More test coverage: hooks, caching edge cases, accessibility interactions.
 - Drag & Drop: Drag and Drop Activities cards from Activities to Weekend days.
 - Community templates: browse, apply, share curated weekend templates (gallery + import/apply UX).
