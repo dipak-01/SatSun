@@ -192,6 +192,14 @@ export async function createWeekend({
 } = {}) {
   const payload = { startDate, endDate, title, mood, isTemplate, days };
   const { data } = await api.post(`weekends`, payload);
+  // Write-through: update cached weekends immediately
+  try {
+    const mod = await import("./storage.js");
+    const current = (await mod.getCachedWeekends()) || [];
+    await mod.setCachedWeekends([data, ...current]);
+  } catch {
+    /* ignore */
+  }
   return data;
 }
 
@@ -205,11 +213,31 @@ export async function updateWeekend(
   if (startDate !== undefined) payload.startDate = startDate;
   if (endDate !== undefined) payload.endDate = endDate;
   const { data } = await api.put(`weekends/${id}`, payload);
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.map((w) =>
+      String(w.id) === String(id) ? { ...w, ...data } : w
+    );
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data;
 }
 
 export async function deleteWeekend(id) {
   const { data } = await api.delete(`weekends/${id}`);
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.filter((w) => String(w.id) !== String(id));
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data;
 }
 
@@ -229,6 +257,25 @@ export async function addActivityToDay(
 ) {
   const payload = { activityId, order, notes, customMood };
   const { data } = await api.post(`activities/day/${dayId}/instances`, payload);
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.map((w) => ({
+      ...w,
+      days: (w.days || []).map((d) =>
+        String(d.id) === String(dayId)
+          ? {
+              ...d,
+              activity_instances: [...(d.activity_instances || []), data],
+            }
+          : d
+      ),
+    }));
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data; // created activity_instance row
 }
 
@@ -238,11 +285,41 @@ export async function createDayForWeekend(
 ) {
   const payload = { date, dayLabel, order, notes, colorTheme };
   const { data } = await api.post(`weekends/${weekendId}/days`, payload);
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.map((w) =>
+      String(w.id) === String(weekendId)
+        ? { ...w, days: [...(w.days || []), data] }
+        : w
+    );
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data; // created day row
 }
 
 export async function updateDayForWeekend(weekendId, dayId, patch) {
   const { data } = await api.put(`weekends/${weekendId}/days/${dayId}`, patch);
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.map((w) => {
+      if (String(w.id) !== String(weekendId)) return w;
+      return {
+        ...w,
+        days: (w.days || []).map((d) =>
+          String(d.id) === String(dayId) ? { ...d, ...data } : d
+        ),
+      };
+    });
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data; // updated day row
 }
 
@@ -255,11 +332,45 @@ export async function updateActivityInstance(
   if (notes !== undefined) payload.notes = notes;
   if (customMood !== undefined) payload.customMood = customMood;
   const { data } = await api.put(`activities/instances/${instanceId}`, payload);
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.map((w) => ({
+      ...w,
+      days: (w.days || []).map((d) => ({
+        ...d,
+        activity_instances: (d.activity_instances || []).map((i) =>
+          String(i.id) === String(instanceId) ? { ...i, ...data } : i
+        ),
+      })),
+    }));
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data;
 }
 
 export async function deleteActivityInstance(instanceId) {
   const { data } = await api.delete(`activities/instances/${instanceId}`);
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.map((w) => ({
+      ...w,
+      days: (w.days || []).map((d) => ({
+        ...d,
+        activity_instances: (d.activity_instances || []).filter(
+          (i) => String(i.id) !== String(instanceId)
+        ),
+      })),
+    }));
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data;
 }
 
@@ -267,6 +378,25 @@ export async function toggleCompleteActivity(instanceId) {
   const { data } = await api.post(
     `activities/instances/${instanceId}/complete`
   );
+  // Write-through cache update
+  try {
+    const mod = await import("./storage.js");
+    const list = (await mod.getCachedWeekends()) || [];
+    const next = list.map((w) => ({
+      ...w,
+      days: (w.days || []).map((d) => ({
+        ...d,
+        activity_instances: (d.activity_instances || []).map((i) =>
+          String(i.id) === String(instanceId)
+            ? { ...i, is_completed: data.is_completed }
+            : i
+        ),
+      })),
+    }));
+    await mod.setCachedWeekends(next);
+  } catch {
+    /* ignore */
+  }
   return data;
 }
 

@@ -1,5 +1,6 @@
 // service worker for SatSun
-const CACHE_NAME = "satsun-cache-v1";
+// Bump the cache name to invalidate any previously cached dynamic API responses.
+const CACHE_NAME = "satsun-static-v2";
 const CORE_ASSETS = ["/", "/index.html", "/logo.svg", "/logo.ico"];
 
 self.addEventListener("install", (event) => {
@@ -28,11 +29,19 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // handle and cache GET requests
+  // Only manage GET requests
   if (request.method !== "GET") return;
 
-  const isHTML = request.headers.get("accept")?.includes("text/html");
+  const url = new URL(request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isHTML =
+    request.mode === "navigate" ||
+    request.headers.get("accept")?.includes("text/html");
 
+  // Never cache API responses; always go to the network for them.
+  if (isSameOrigin && url.pathname.startsWith("/api")) return;
+
+  // HTML navigations: network-first so app updates deploy quickly
   if (isHTML) {
     event.respondWith(
       fetch(request)
@@ -44,6 +53,13 @@ self.addEventListener("fetch", (event) => {
         .catch(() => caches.match(request))
     );
     return;
+  }
+
+  // For static assets (scripts, styles, fonts, images), use cache-first.
+  const allowedStatic = ["script", "style", "font", "image"];
+  if (!allowedStatic.includes(request.destination)) {
+    // For other requests (e.g., data/json not under /api), just fall back to network.
+    return; // Let the browser han  dle it normally (network)
   }
 
   event.respondWith(
