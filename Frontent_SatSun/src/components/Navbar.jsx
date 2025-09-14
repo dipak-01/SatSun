@@ -13,6 +13,10 @@ function Navbar() {
     setIsLoggedIn(!!raw);
   }, []);
 
+  function closeMenu() {
+    const el = document.activeElement;
+    if (el && typeof el.blur === "function") el.blur();
+  }
   async function handleLogout() {
     try {
       await apiLogout();
@@ -140,6 +144,9 @@ function Navbar() {
                       ? "active"
                       : undefined
                   }
+                  onClick={() => {
+                    closeMenu();
+                  }}
                 >
                   Planner
                 </Link>
@@ -153,6 +160,9 @@ function Navbar() {
                       ? "active"
                       : undefined
                   }
+                  onClick={() => {
+                    closeMenu();
+                  }}
                 >
                   Activities
                 </Link>
@@ -166,6 +176,9 @@ function Navbar() {
                       ? "active"
                       : undefined
                   }
+                  onClick={() => {
+                    closeMenu();
+                  }}
                 >
                   Calendar
                 </Link>
@@ -206,11 +219,15 @@ function Navbar() {
                   <li>
                     <button
                       role="menuitem"
-                      onClick={handleLogout}
+                      onClick={() => {
+                        // close menu then logout
+                        const el = document.activeElement;
+                        if (el && typeof el.blur === "function") el.blur();
+                        handleLogout();
+                      }}
                       className="justify-between"
                     >
                       Logout
-                      <span className="badge badge-soft">Ctrl+L</span>
                     </button>
                   </li>
                 </>
