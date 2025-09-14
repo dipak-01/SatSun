@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <span className="text-sm">
-            © 2025 SatSun. Built with <span aria-hidden="true">❤️</span> for the{' '}
+            © 2025 SatSun. Built with <span aria-hidden="true">❤️</span> for {' '}
             <span style={{ color: '#1473E6' }}>Atlan</span>
           </span>
         </div>
