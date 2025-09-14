@@ -51,7 +51,7 @@ function Navbar() {
           >
             <span className="flex items-center gap-2">
               <img src="/logo.svg" alt="SatSun" className="h-6 w-6" />
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="font-logo text-[1.4rem] sm:text-[1.5rem] bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 SatSun
               </span>
             </span>
