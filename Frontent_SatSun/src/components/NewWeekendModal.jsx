@@ -7,7 +7,7 @@ export default function NewWeekendModal() {
     <>
       <dialog
         id="my_modal_4"
-        className="modal modal-bottom sm:modal-middle text-start"
+        className="modal modal-middle sm:modal-middle text-start"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             e.currentTarget.close();

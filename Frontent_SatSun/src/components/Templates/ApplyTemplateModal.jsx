@@ -37,7 +37,7 @@ export default function ApplyTemplateModal({
   if (!open) return null;
 
   return (
-    <dialog className="modal modal-open modal-bottom sm:modal-middle">
+    <dialog className="modal modal-open modal-middle sm:modal-middle">
       <div className="modal-box w-full max-w-xl max-h-[85vh] overflow-y-auto relative">
         <button
           aria-label="Close"

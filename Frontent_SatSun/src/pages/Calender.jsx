@@ -388,7 +388,7 @@ export default function Calender() {
       )}
 
       {modalDate && (
-        <dialog className="modal modal-open modal-bottom sm:modal-middle">
+        <dialog className="modal modal-open modal-middle sm:modal-middle">
           <div className="modal-box max-h-[85vh] overflow-y-auto">
             <h3 className="font-bold text-lg">
               {modalDate.toLocaleDateString(undefined, {
