@@ -73,7 +73,7 @@ function Navbar() {
               }`}
               aria-label="Planner"
             >
-              Planner
+              Weekends
             </Link>
             <Link
               to="/activities"
@@ -130,11 +130,7 @@ function Navbar() {
               role="menu"
               className="dropdown-content menu bg-base-200 rounded-box w-56 p-2 shadow"
             >
-              {/* <li>
-                <Link role="menuitem" to="/weekend">
-                  Weekend
-                </Link>
-              </li> */}
+              
               <li>
                 <Link
                   role="menuitem"
@@ -148,7 +144,7 @@ function Navbar() {
                     closeMenu();
                   }}
                 >
-                  Planner
+                  Weekends
                 </Link>
               </li>
               <li>

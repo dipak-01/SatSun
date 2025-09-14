@@ -234,7 +234,6 @@ export default function Timeline({
                     </div>
                   </div>
                 </div>
-                {/* Removed full-card navigation; only the title is clickable now */}
               </li>
             );
           })}

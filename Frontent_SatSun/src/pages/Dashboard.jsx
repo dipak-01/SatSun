@@ -13,11 +13,11 @@ function Dashboard() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Parse user for future personalization (intentionally unused)
+    // Parse user for future personalization 
     try {
       const raw = localStorage.getItem("user");
       const _USER = raw ? JSON.parse(raw) : null;
-      void _USER; // parsed for potential personalization
+      void _USER; 
     } catch {
       // ignore parse errors
     }

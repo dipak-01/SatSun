@@ -21,7 +21,7 @@ export default function Login() {
       } else {
         setMessage("Logged in");
 
-        // Persist minimal user info if needed
+       
         if (data?.user) {
           try {
             localStorage.setItem("user", JSON.stringify(data.user));

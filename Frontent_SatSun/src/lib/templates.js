@@ -1,6 +1,5 @@
 // Built-in weekend templates
-// Each template lists day labels and a list of activity queries to match user activities.
-// We attempt best-effort matching by title substring or category.
+
 
 export const WEEKEND_TEMPLATES = [
   {

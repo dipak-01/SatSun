@@ -2,35 +2,6 @@ import { Clock } from "lucide-react";
 import { memo } from "react";
 
 function ActivityCardImpl({ data }) {
-  // const { start_date, end_date } = data || {};
-
-  // const formatPart = (d) => {
-  //   if (!d) return "";
-  //   const dt = new Date(d);
-  //   if (isNaN(dt)) return "";
-  //   return dt.toLocaleDateString("en-US", {
-  //     weekday: "short",
-  //     month: "short",
-  //     day: "numeric",
-  //   });
-  // };
-
-  // const startLabel = formatPart(start_date);
-  // const endLabel = formatPart(end_date);
-  // const rangeLabel =
-  //   endLabel && startLabel !== endLabel
-  //     ? `${startLabel} - ${endLabel}`
-  //     : startLabel;
-
-  // let duration = "";
-  // if (start_date) {
-  //   const s = new Date(start_date);
-  //   const e = end_date ? new Date(end_date) : s;
-  //   if (!isNaN(s) && !isNaN(e)) {
-  //     const days = Math.max(1, Math.round((e - s) / 86400000) + 1);
-  //     duration = `${days} day${days !== 1 ? "s" : ""}`;
-  //   }
-  // }
 
   return (
     <div className="card bg-base-100 w-[88vw] max-w-sm min-w-[16rem] sm:w-80 md:w-96 border border-base-300 hover:border-primary/40 transition-colors shadow-sm h-60">

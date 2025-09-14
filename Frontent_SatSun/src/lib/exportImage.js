@@ -1,5 +1,5 @@
 // Lightweight wrapper around html-to-image to export a DOM node to PNG
-// Handles scaling for crisp output and safe filename defaults.
+
 import { toPng } from "html-to-image";
 
 function sanitizeFilename(name) {
@@ -21,7 +21,7 @@ export async function exportNodeToPng(node, opts = {}) {
   if (!node) throw new Error("exportNodeToPng: target node not found");
   const {
     filename = "weekend.png",
-    pixelRatio = 2, // 2x for sharper result
+    pixelRatio = 2, // 2x  sharper result
     backgroundColor, // optional override
     cacheBust = true,
     style = {},

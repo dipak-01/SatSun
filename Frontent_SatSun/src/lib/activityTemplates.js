@@ -1,5 +1,4 @@
 // Built-in activity templates for quick creation
-// Each template maps directly to the createActivity payload shape.
 
 export const ACTIVITY_TEMPLATES = [
   {

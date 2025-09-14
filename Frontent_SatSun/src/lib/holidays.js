@@ -1,4 +1,4 @@
-// India holidays (subset) for Sep–Dec 2025, provided by user
+// India holidays (subset) for Sep–Dec 2025
 // Utilities to query by local date and by month
 
 const RAW_HOLIDAYS = [

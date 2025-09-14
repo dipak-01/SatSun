@@ -1,4 +1,4 @@
-// Minimal service worker for SatSun
+// service worker for SatSun
 const CACHE_NAME = "satsun-cache-v1";
 const CORE_ASSETS = ["/", "/index.html", "/logo.svg", "/logo.ico"];
 
@@ -28,7 +28,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // Only handle and cache GET requests; let others pass through
+  // handle and cache GET requests
   if (request.method !== "GET") return;
 
   const isHTML = request.headers.get("accept")?.includes("text/html");

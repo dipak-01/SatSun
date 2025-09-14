@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 import React from "react";
 
-// Minimal tests to validate vitest + jsdom + RTL wiring
+// tests to validate vitest + jsdom + RTL wiring
 
 describe("frontend smoke", () => {
   it("math works", () => {

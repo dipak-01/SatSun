@@ -27,7 +27,7 @@ import MoveInstanceModal from "../components/Planner/MoveInstanceModal";
 import { WEEKEND_TEMPLATES, matchActivityId } from "../lib/templates";
 import Spinner from "../components/ui/Spinner";
 import Card from "../components/ui/Card";
-// offline enqueue removed per request
+
 import ActivityRow from "../components/Planner/ActivityRow";
 import { toISODate } from "../lib/date";
 import { byOrder } from "../lib/sort";
@@ -58,19 +58,18 @@ export default function WeekendPlannar() {
   const [selectedActivityId, setSelectedActivityId] = useState("");
   const [orderHint, setOrderHint] = useState("");
 
-  // New UI states
   const [showAddDay, setShowAddDay] = useState(false);
   const [newDayForm, setNewDayForm] = useState({ date: "", dayLabel: "" });
   const [showEditDay, setShowEditDay] = useState(null); // holds day to edit
   const [editDayLabel, setEditDayLabel] = useState("");
-  // Instance edit UI removed per request
+  
   const [moveInstance, setMoveInstance] = useState(null); // { inst, fromDayId, targetDayId }
   const exportRef = useRef(null);
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
 
-  // Templates UI state (gallery inline; apply remains a modal)
+  // Templates UI state (gallery inline)
   const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
@@ -109,7 +108,7 @@ export default function WeekendPlannar() {
     const onDown = () => setIsOnline(false);
     window.addEventListener("online", onUp);
     window.addEventListener("offline", onDown);
-    // no offline queue
+     
     return () => {
       mounted = false;
       window.removeEventListener("online", onUp);
@@ -131,7 +130,7 @@ export default function WeekendPlannar() {
   );
   const activityMap = useMemo(() => byIdMap(activities, "id"), [activities]);
 
-  // ActivityRow now a reusable component
+  
 
   // Mutating handlers wrapped in useCallback to keep stable references
   const removeInstance = useCallback(
@@ -396,8 +395,7 @@ export default function WeekendPlannar() {
     setEditDayLabel("");
   }
 
-  // Reorder an instance within a day (swap with neighbor)
-
+ 
   // Clear completed instances from a day
   async function clearCompleted(day) {
     const list = (day.activity_instances || []).filter((i) => !!i.is_completed);
@@ -423,8 +421,7 @@ export default function WeekendPlannar() {
     );
   }
 
-  // Notes & custom mood editing removed
-
+ 
   // Move instance to another day (create in target, delete from source)
 
   async function handleMoveInstance() {
@@ -635,11 +632,7 @@ export default function WeekendPlannar() {
                       <div className="flex items-start sm:items-center justify-between p-3 bg-base-200 rounded-t-box gap-2 flex-col sm:flex-row">
                         <div className="font-medium break-words">
                           {day?.day_label}
-                          {/* {new Date(day.date).toLocaleDateString(undefined, {
-                              weekday: "long",
-                              month: "short",
-                              day: "numeric",
-                            })} */}
+                         
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs opacity-70 mr-2">
@@ -849,8 +842,7 @@ export default function WeekendPlannar() {
               for (let i = 0; i < len; i++)
                 dateList.push(addDays(startDateIso, i));
             }
-            // If mismatch with template days, clamp to template length
-            if (
+             if (
               dayTemplates?.length &&
               dateList.length !== dayTemplates.length
             ) {

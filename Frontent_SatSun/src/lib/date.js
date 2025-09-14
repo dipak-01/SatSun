@@ -1,4 +1,4 @@
-// Simple date helpers used across pages
+//  date helpers to used across pages
 
 export function toISODate(d) {
   if (!d) return "";

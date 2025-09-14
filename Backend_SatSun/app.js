@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import router from "./routes/index.js";
 import { supabase } from "./db/supabaseClient.js";
 
-// Validate env (don't hard exit in serverless)
+// Validate env 
 const { SUPABASE_URL, SUPABASE_KEY, PORT = 3000 } = process.env;
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.warn(
@@ -67,7 +67,7 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-// Expose the supabase client if needed elsewhere
+
 export { supabase };
 
 // API routes

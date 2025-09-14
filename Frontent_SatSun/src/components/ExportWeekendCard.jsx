@@ -51,12 +51,7 @@ const ExportWeekendCard = forwardRef(function ExportWeekendCard(
               {dateRange}
             </div>
           </div>
-          {/* QR placeholder */}
-          <div className="hidden sm:flex items-center">
-            <div className="w-16 h-16 rounded-box bg-base-100 border border-base-300 grid place-items-center text-[10px] opacity-70">
-              QR
-            </div>
-          </div>
+         
         </div>
       </div>
 

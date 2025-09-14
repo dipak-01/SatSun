@@ -1,4 +1,4 @@
-// Lightweight storage helpers: IndexedDB (preferred) with localStorage fallback
+//  storage helpers: IndexedDB (preferred) with localStorage fallback
 // Stores JSON values under a simple key space.
 
 const DB_NAME = "satsun-cache-v1";
@@ -85,7 +85,7 @@ export const storage = {
   setJSON: lsSetJSON,
 };
 
-// Offline mutation queue removed per request
+
 
 // Activities cache helpers
 export async function getCachedActivities(params) {
