@@ -1,17 +1,21 @@
 # SatSun (Weekendly) ✨
 
-Plan delightful weekends fast. Browse activities, build a schedule, and export/share — now offline-friendly and snappy.
+ 
+<img width="5120" height="2880" alt="Web Browser Mockup (Community)" src="https://github.com/user-attachments/assets/3a6fe97b-fce3-4451-a8d9-2db141376eca" />
+
+
+## 📖 Project Overview
+SatSun(Weekendly) is a lightweight planner to turn free weekends into simple, shareable schedules.
+Browse an activity library (or templates), add items to any number of days, and reorder or move them with ease.
+It’s fast and offline‑friendly thanks to cache‑first reads and a PWA app shell, with one‑click PNG export for sharing.
+Secure cookie‑based auth powers the frontend via an Express + Supabase API with auto‑refresh.
+Perfect for planning delightful weekends without the bloat.
 
 ## 🔗 Live & Repo
 - Live: https://sat-sun.vercel.com
 - Repo: https://github.com/dipak-01/SatSun
 
-## 📖 Project Overview
-Weekendly is a lightweight planner to turn free weekends into simple, shareable schedules.
-Browse an activity library (or templates), add items to any number of days, and reorder or move them with ease.
-It’s fast and offline‑friendly thanks to cache‑first reads and a PWA app shell, with one‑click PNG export for sharing.
-Secure cookie‑based auth powers the frontend via an Express + Supabase API with auto‑refresh.
-Perfect for planning delightful weekends without the bloat.
+
 
 ## 🎬 Demo Video
 - Watch: Coming soon (add your link here — YouTube, Loom, or Drive)
