@@ -1,6 +1,9 @@
 # SatSun (Weekendly) ✨
 
-<img width="5120" height="2880" alt="Web Browser Mockup (Community)" src="https://github.com/user-attachments/assets/3a6fe97b-fce3-4451-a8d9-2db141376eca" />
+ 
+
+![img](https://github.com/user-attachments/assets/84e881dc-0c16-40eb-9376-02fa5b888fcf)
+
 
 ## 📖 Project Overview
 
